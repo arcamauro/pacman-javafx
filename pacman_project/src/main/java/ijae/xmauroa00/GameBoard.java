@@ -6,12 +6,35 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.util.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.DialogPane;
+import javafx.stage.Stage;
+import javafx.application.Platform;
+import javafx.scene.control.Button;
 
 public class GameBoard extends GridPane {
     private static final int CELL_SIZE = 40;
     private Cell[][] board;
     private int rows;
     private int cols;
+    private Cell playerCell;
+    private List<Cell> ghostCells;
+    private boolean isGateOpen;
+    private int points;
+    private boolean hasKey;
+    private Timeline gameLoop;
+    private Direction currentDirection;
+    
+    private enum Direction {
+        UP, DOWN, LEFT, RIGHT, NONE
+    }
     
     // Load images
     private final Image playerImage = new Image("file:Images/PacMan.png");
@@ -21,7 +44,149 @@ public class GameBoard extends GridPane {
     private final Image redGhostImage = new Image("file:Images/red_ghost.png");
     
     public GameBoard(String levelData) {
+        ghostCells = new ArrayList<>();
+        currentDirection = Direction.NONE;
+        points = 0;
+        hasKey = false;
+        isGateOpen = false;
+        
         loadLevel(levelData);
+        setupGameLoop();
+        setupKeyHandlers();
+    }
+    
+    private void setupGameLoop() {
+        gameLoop = new Timeline(new KeyFrame(Duration.millis(200), e -> gameStep()));
+        gameLoop.setCycleCount(Timeline.INDEFINITE);
+        gameLoop.play();
+    }
+    
+    public void setGameSpeed(double speedMillis) {
+        gameLoop.stop();
+        gameLoop = new Timeline(new KeyFrame(Duration.millis(speedMillis), e -> gameStep()));
+        gameLoop.setCycleCount(Timeline.INDEFINITE);
+        gameLoop.play();
+    }
+    
+    private void setupKeyHandlers() {
+        setFocusTraversable(true);
+        setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case UP:    currentDirection = Direction.UP; break;
+                case DOWN:  currentDirection = Direction.DOWN; break;
+                case LEFT:  currentDirection = Direction.LEFT; break;
+                case RIGHT: currentDirection = Direction.RIGHT; break;
+            }
+        });
+    }
+    
+    private void gameStep() {
+        movePlayer();
+        moveGhosts();
+        checkCollisions();
+    }
+    
+    private void movePlayer() {
+        if (currentDirection == Direction.NONE) return;
+        
+        int[] newPos = getNewPosition(playerCell, currentDirection);
+        if (canMoveTo(newPos[0], newPos[1])) {
+            moveEntity(playerCell, newPos[0], newPos[1]);
+        }
+    }
+    
+    private void moveGhosts() {
+        for (Cell ghostCell : ghostCells) {
+            Direction randomDir = getRandomDirection();
+            int[] newPos = getNewPosition(ghostCell, randomDir);
+            if (canMoveTo(newPos[0], newPos[1])) {
+                moveEntity(ghostCell, newPos[0], newPos[1]);
+            }
+        }
+    }
+    
+    private Direction getRandomDirection() {
+        Direction[] directions = Direction.values();
+        return directions[(int)(Math.random() * (directions.length - 1))]; // Exclude NONE
+    }
+    
+    private int[] getNewPosition(Cell cell, Direction dir) {
+        int row = GridPane.getRowIndex(cell);
+        int col = GridPane.getColumnIndex(cell);
+        
+        switch (dir) {
+            case UP:    return new int[]{row - 1, col};
+            case DOWN:  return new int[]{row + 1, col};
+            case LEFT:  return new int[]{row, col - 1};
+            case RIGHT: return new int[]{row, col + 1};
+            default:    return new int[]{row, col};
+        }
+    }
+    
+    private boolean canMoveTo(int row, int col) {
+        if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
+        Cell targetCell = board[row][col];
+        if (targetCell.isWall) return false;
+        if (targetCell.isGate && !hasKey) return false;
+        return true;
+    }
+    
+    private void moveEntity(Cell entityCell, int newRow, int newCol) {
+        Cell targetCell = board[newRow][newCol];
+        
+        // Handle player collecting items
+        if (entityCell == playerCell) {
+            if (targetCell.hasPoint) {
+                points += 10;
+                targetCell.removePoint();
+            }
+            if (targetCell.hasKey) {
+                hasKey = true;
+                isGateOpen = true;
+                targetCell.removeKey();
+            }
+            if (targetCell.isGate && hasKey) {
+                gameWon();
+                return;  // Stop here if game is won
+            }
+            if (targetCell.hasGhost) {  // Check if moving onto a ghost
+                gameLost();
+                return;  // Stop here if collision occurs
+            }
+        }
+        
+        // Check if a ghost is moving onto the player
+        if (entityCell.hasGhost && board[newRow][newCol] == playerCell) {
+            gameLost();
+            return;  // Stop here if collision occurs
+        }
+        
+        // Swap cells
+        int oldRow = GridPane.getRowIndex(entityCell);
+        int oldCol = GridPane.getColumnIndex(entityCell);
+        getChildren().remove(entityCell);
+        getChildren().remove(targetCell);
+        add(entityCell, newCol, newRow);
+        add(targetCell, oldCol, oldRow);
+        
+        // Update board array
+        board[oldRow][oldCol] = targetCell;
+        board[newRow][newCol] = entityCell;
+    }
+    
+    private void checkCollisions() {
+        int playerRow = GridPane.getRowIndex(playerCell);
+        int playerCol = GridPane.getColumnIndex(playerCell);
+        
+        for (Cell ghostCell : ghostCells) {
+            int ghostRow = GridPane.getRowIndex(ghostCell);
+            int ghostCol = GridPane.getColumnIndex(ghostCell);
+            
+            if (playerRow == ghostRow && playerCol == ghostCol) {
+                gameLost();
+                break;  // Stop checking other ghosts
+            }
+        }
     }
     
     private void loadLevel(String levelData) {
@@ -127,6 +292,7 @@ public class GameBoard extends GridPane {
             playerView.setFitWidth(CELL_SIZE);
             playerView.setFitHeight(CELL_SIZE);
             getChildren().add(playerView);
+            playerCell = this; // Store reference to player cell
         }
         
         public void setGhost() {
@@ -136,6 +302,7 @@ public class GameBoard extends GridPane {
             ghostView.setFitWidth(CELL_SIZE);
             ghostView.setFitHeight(CELL_SIZE);
             getChildren().add(ghostView);
+            ghostCells.add(this); // Add to ghost cells list
         }
         
         private Image getRandomGhostImage() {
@@ -170,5 +337,127 @@ public class GameBoard extends GridPane {
             background.setStrokeWidth(0.5);
             getChildren().add(background);
         }
+        
+        public void removePoint() {
+            hasPoint = false;
+            // Remove the point visual (last child in the stack)
+            if (getChildren().size() > 1) {
+                getChildren().remove(getChildren().size() - 1);
+            }
+        }
+        
+        public void removeKey() {
+            hasKey = false;
+            // Remove the key visual (last child in the stack)
+            if (getChildren().size() > 1) {
+                getChildren().remove(getChildren().size() - 1);
+            }
+        }
+    }
+    
+    private void gameWon() {
+        gameLoop.stop();
+        System.out.println("Game Won! Points: " + points);
+        // You can add more game won handling here, like showing a victory screen
+    }
+    
+    private void gameLost() {
+        gameLoop.stop();
+        
+        Platform.runLater(() -> {
+            // Create dialog
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Game Over");
+            dialog.setHeaderText("Game Over!\nPoints: " + points);
+            
+            // Add return to menu button
+            ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().add(menuButton);
+            
+            // Style the dialog
+            DialogPane dialogPane = dialog.getDialogPane();
+            
+            // Main dialog styling
+            dialogPane.setStyle(
+                "-fx-background-color: #000000;" +
+                "-fx-border-color: #FFD700;" +  // Gold border
+                "-fx-border-width: 3px;"
+            );
+            
+            // Header styling
+            dialogPane.lookup(".header-panel").setStyle(
+                "-fx-background-color: #000000;" +
+                "-fx-border-color: #FFD700;" +  // Gold border
+                "-fx-border-width: 0 0 2 0;"    // Bottom border only
+            );
+            
+            dialogPane.lookup(".header-panel .label").setStyle(
+                "-fx-text-fill: #FF0000;" +     // Red text
+                "-fx-font-size: 28px;" +
+                "-fx-font-weight: bold;" +
+                "-fx-font-family: 'Arial';"
+            );
+            
+            // Content styling
+            dialogPane.lookup(".content.label").setStyle(
+                "-fx-text-fill: #FFFFFF;" +     // White text
+                "-fx-font-size: 20px;" +
+                "-fx-font-family: 'Arial';"
+            );
+            
+            // Button styling
+            Button button = (Button) dialogPane.lookupButton(menuButton);
+            button.setStyle(
+                "-fx-background-color: #0000FF;" +  // Blue background
+                "-fx-text-fill: #FFFFFF;" +         // White text
+                "-fx-font-size: 16px;" +
+                "-fx-min-width: 150px;" +
+                "-fx-min-height: 40px;" +
+                "-fx-background-radius: 20;" +      // Rounded corners
+                "-fx-border-radius: 20;" +
+                "-fx-cursor: hand;"                 // Hand cursor on hover
+            );
+            
+            // Add hover effect to button
+            button.setOnMouseEntered(e -> 
+                button.setStyle(
+                    "-fx-background-color: #000080;" +  // Darker blue on hover
+                    "-fx-text-fill: #FFD700;" +         // Gold text on hover
+                    "-fx-font-size: 16px;" +
+                    "-fx-min-width: 150px;" +
+                    "-fx-min-height: 40px;" +
+                    "-fx-background-radius: 20;" +
+                    "-fx-border-radius: 20;" +
+                    "-fx-cursor: hand;"
+                )
+            );
+            
+            button.setOnMouseExited(e -> 
+                button.setStyle(
+                    "-fx-background-color: #0000FF;" +
+                    "-fx-text-fill: #FFFFFF;" +
+                    "-fx-font-size: 16px;" +
+                    "-fx-min-width: 150px;" +
+                    "-fx-min-height: 40px;" +
+                    "-fx-background-radius: 20;" +
+                    "-fx-border-radius: 20;" +
+                    "-fx-cursor: hand;"
+                )
+            );
+            
+            // Show dialog and handle result
+            dialog.showAndWait().ifPresent(response -> {
+                if (response == menuButton) {
+                    // Return to menu
+                    Stage stage = (Stage) getScene().getWindow();
+                    Menu menu = new Menu();
+                    try {
+                        menu.start(stage);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        });
     }
 }

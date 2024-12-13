@@ -18,6 +18,7 @@ public class Menu extends Application {
     private static final int WINDOW_WIDTH = 400;
     private static final int WINDOW_HEIGHT = 500;
     private VBox menuContainer;
+    private GameBoard gameBoard;
 
     @Override
     public void start(Stage primaryStage) {
@@ -33,12 +34,14 @@ public class Menu extends Application {
 
         // Create buttons
         Button startButton = createMenuButton("Start Game");
+        Button speedButton = createMenuButton("Speed: Normal");
         Button highScoresButton = createMenuButton("High Scores");
         Button helpButton = createMenuButton("Help");
         Button exitButton = createMenuButton("Exit");
 
         // Add event handlers
         startButton.setOnAction(e -> startGame());
+        speedButton.setOnAction(e -> toggleSpeed(speedButton));
         highScoresButton.setOnAction(e -> showHighScores());
         helpButton.setOnAction(e -> showHelp());
         exitButton.setOnAction(e -> primaryStage.close());
@@ -47,6 +50,7 @@ public class Menu extends Application {
         menuContainer.getChildren().addAll(
             titleText,
             startButton,
+            speedButton,
             highScoresButton,
             helpButton,
             exitButton
@@ -94,22 +98,41 @@ public class Menu extends Application {
         return button;
     }
 
+    private double currentSpeed = 200; // Store current speed
+
+    private void toggleSpeed(Button speedButton) {
+        switch (speedButton.getText()) {
+            case "Speed: Normal":
+                currentSpeed = 100;  // Fast speed
+                speedButton.setText("Speed: Fast");
+                break;
+            case "Speed: Fast":
+                currentSpeed = 300;  // Slow speed
+                speedButton.setText("Speed: Slow");
+                break;
+            default:
+                currentSpeed = 200;  // Normal speed
+                speedButton.setText("Speed: Normal");
+                break;
+        }
+        
+        if (gameBoard != null) {
+            gameBoard.setGameSpeed(currentSpeed);
+        }
+    }
+
     private void startGame() {
         try {
-            // Read the level file
             String levelData = Files.readString(Path.of("levels/level1.txt"));
+            gameBoard = new GameBoard(levelData);
+            gameBoard.setGameSpeed(currentSpeed); // Apply current speed when starting
             
-            GameBoard gameBoard = new GameBoard(levelData);
-            
-            // Get the current stage
             Stage primaryStage = (Stage) menuContainer.getScene().getWindow();
-            
-            // Create new scene with the game board
             Scene gameScene = new Scene(gameBoard);
-            
-            // Set the new scene to the existing window
             primaryStage.setScene(gameScene);
-            primaryStage.setTitle("Pacman Game");
+            
+            // Give focus to the game board for key events
+            gameBoard.requestFocus();
             
         } catch (IOException e) {
             System.err.println("Error loading level file: " + e.getMessage());
