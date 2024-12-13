@@ -1,12 +1,4 @@
-ijae\xmauroa00\GameMenu.class
-ijae\xmauroa00\Ghost.class
-ijae\xmauroa00\Field$FieldType.class
-ijae\xmauroa00\PacmanGame.class
-ijae\xmauroa00\GameBoard$1.class
+ijae\xmauroa00\Menu.class
+ijae\xmauroa00\GameBoard$Cell.class
 module-info.class
-ijae\xmauroa00\GameBoard$2.class
-ijae\xmauroa00\Player.class
-ijae\xmauroa00\Direction.class
-ijae\xmauroa00\Field.class
-ijae\xmauroa00\Field$Item.class
 ijae\xmauroa00\GameBoard.class
