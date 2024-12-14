@@ -1,5 +1,6 @@
 package ijae.xmauroa00;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -44,10 +46,9 @@ public class GameBoard extends GridPane {
     
     // Load images
     private final Image playerImage = new Image("file:Images/PacMan.png");
-    private final Image blueGhostImage = new Image("file:Images/blue_ghost.png");
     private final Image orangeGhostImage = new Image("file:Images/orange_ghost.png");
-    private final Image pinkGhostImage = new Image("file:Images/pink_ghost.png");
     private final Image redGhostImage = new Image("file:Images/red_ghost.png");
+    private final Image keyImage = new Image("file:Images/key.png");
     
     public GameBoard(String levelData, int level) {
         ghostCells = new ArrayList<>();
@@ -322,9 +323,7 @@ public class GameBoard extends GridPane {
         private Image getRandomGhostImage() {
             Image[] ghostImages = {
                 redGhostImage,
-                blueGhostImage,
                 orangeGhostImage,
-                pinkGhostImage
             };
             int randomIndex = (int) (Math.random() * ghostImages.length);
             return ghostImages[randomIndex];
@@ -332,9 +331,10 @@ public class GameBoard extends GridPane {
         
         public void setKey() {
             hasKey = true;
-            Rectangle key = new Rectangle(CELL_SIZE/2, CELL_SIZE/2);
-            key.setFill(Color.YELLOW);
-            getChildren().add(key);
+            ImageView keyView = new ImageView(keyImage);
+            keyView.setFitWidth(CELL_SIZE/2);
+            keyView.setFitHeight(CELL_SIZE/2);
+            getChildren().add(keyView);
         }
         
         public void setPoint() {
@@ -397,12 +397,15 @@ public class GameBoard extends GridPane {
                     setupGameLoop();
                     
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.out.println("Error loading next level");
                 }
             });
         } else {
             // Final level completed
             Platform.runLater(() -> {
+                // Save the score
+                Menu.saveHighScore(points);
+                
                 Dialog<ButtonType> dialog = new Dialog<>();
                 dialog.setTitle("Congratulations!");
                 dialog.setHeaderText("You've completed all levels!\nTotal Points: " + points);
@@ -421,7 +424,7 @@ public class GameBoard extends GridPane {
                         try {
                             menu.start(stage);
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            System.out.println("Error returning to menu");
                         }
                     }
                 });
@@ -433,14 +436,18 @@ public class GameBoard extends GridPane {
         gameLoop.stop();
         
         Platform.runLater(() -> {
+            // Save the score
+            Menu.saveHighScore(points);
+            
             // Create dialog
             Dialog<ButtonType> dialog = new Dialog<>();
             dialog.setTitle("Game Over");
             dialog.setHeaderText("Game Over!\nPoints: " + points);
             
-            // Add return to menu button
+            // Add buttons
             ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
-            dialog.getDialogPane().getButtonTypes().add(menuButton);
+            ButtonType restartButton = new ButtonType("Restart from Level 1", ButtonBar.ButtonData.OTHER);
+            dialog.getDialogPane().getButtonTypes().addAll(menuButton, restartButton);
             
             // Style the dialog
             DialogPane dialogPane = dialog.getDialogPane();
@@ -473,34 +480,9 @@ public class GameBoard extends GridPane {
                 "-fx-font-family: 'Arial';"
             );
             
-            // Button styling
-            Button button = (Button) dialogPane.lookupButton(menuButton);
-            button.setStyle(
-                "-fx-background-color: #0000FF;" +  // Blue background
-                "-fx-text-fill: #FFFFFF;" +         // White text
-                "-fx-font-size: 16px;" +
-                "-fx-min-width: 150px;" +
-                "-fx-min-height: 40px;" +
-                "-fx-background-radius: 20;" +      // Rounded corners
-                "-fx-border-radius: 20;" +
-                "-fx-cursor: hand;"                 // Hand cursor on hover
-            );
-            
-            // Add hover effect to button
-            button.setOnMouseEntered(e -> 
-                button.setStyle(
-                    "-fx-background-color: #000080;" +  // Darker blue on hover
-                    "-fx-text-fill: #FFD700;" +         // Gold text on hover
-                    "-fx-font-size: 16px;" +
-                    "-fx-min-width: 150px;" +
-                    "-fx-min-height: 40px;" +
-                    "-fx-background-radius: 20;" +
-                    "-fx-border-radius: 20;" +
-                    "-fx-cursor: hand;"
-                )
-            );
-            
-            button.setOnMouseExited(e -> 
+            // Style both buttons
+            for (ButtonType buttonType : dialog.getDialogPane().getButtonTypes()) {
+                Button button = (Button) dialogPane.lookupButton(buttonType);
                 button.setStyle(
                     "-fx-background-color: #0000FF;" +
                     "-fx-text-fill: #FFFFFF;" +
@@ -510,19 +492,57 @@ public class GameBoard extends GridPane {
                     "-fx-background-radius: 20;" +
                     "-fx-border-radius: 20;" +
                     "-fx-cursor: hand;"
-                )
-            );
+                );
+                
+                // Add hover effect to buttons
+                button.setOnMouseEntered(e -> 
+                    button.setStyle(
+                        "-fx-background-color: #000080;" +
+                        "-fx-text-fill: #FFD700;" +
+                        "-fx-font-size: 16px;" +
+                        "-fx-min-width: 150px;" +
+                        "-fx-min-height: 40px;" +
+                        "-fx-background-radius: 20;" +
+                        "-fx-border-radius: 20;" +
+                        "-fx-cursor: hand;"
+                    )
+                );
+                
+                button.setOnMouseExited(e -> 
+                    button.setStyle(
+                        "-fx-background-color: #0000FF;" +
+                        "-fx-text-fill: #FFFFFF;" +
+                        "-fx-font-size: 16px;" +
+                        "-fx-min-width: 150px;" +
+                        "-fx-min-height: 40px;" +
+                        "-fx-background-radius: 20;" +
+                        "-fx-border-radius: 20;" +
+                        "-fx-cursor: hand;"
+                    )
+                );
+            }
             
             // Show dialog and handle result
             dialog.showAndWait().ifPresent(response -> {
+                Stage stage = (Stage) getScene().getWindow();
                 if (response == menuButton) {
                     // Return to menu
-                    Stage stage = (Stage) getScene().getWindow();
                     Menu menu = new Menu();
                     try {
                         menu.start(stage);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        System.out.println("Error returning to menu");
+                    }
+                } else if (response == restartButton) {
+                    // Restart from level 1
+                    try {
+                        String levelData = Files.readString(Path.of("levels/level1.txt"));
+                        GameBoard newGame = new GameBoard(levelData, 1);
+                        Scene gameScene = new Scene(newGame);
+                        stage.setScene(gameScene);
+                        newGame.requestFocus();
+                    } catch (IOException e) {
+                        System.out.println("Error restarting from level 1");
                     }
                 }
             });

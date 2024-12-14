@@ -1,10 +1,10 @@
 9 11
 WWWWWWWWWWW
-WP.o.o.o..W
+WP.o.o.o.CW
 W.WWWWW.W.W
-W.o...o.o.W
+W.o.C.o.o.W
 W.W.WKW.W.W
-W.o...o.o.W
+W.o.C.o.o.W
 W.WWWWW.W.W
-W..o.o.o.GW
+WC.o.o.o.GW
 WWWWWWWWWWW
