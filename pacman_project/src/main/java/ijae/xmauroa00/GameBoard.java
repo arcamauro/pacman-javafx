@@ -1,26 +1,30 @@
 package ijae.xmauroa00;
 
-import javafx.scene.layout.GridPane;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.animation.Timeline;
-import javafx.animation.KeyFrame;
-import javafx.util.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.DialogPane;
 import javafx.stage.Stage;
-import javafx.application.Platform;
-import javafx.scene.control.Button;
+import javafx.util.Duration;
 
 public class GameBoard extends GridPane {
-    private static final int CELL_SIZE = 40;
+    private static final int CELL_SIZE = 60;
     private Cell[][] board;
     private int rows;
     private int cols;
@@ -31,6 +35,8 @@ public class GameBoard extends GridPane {
     private boolean hasKey;
     private Timeline gameLoop;
     private Direction currentDirection;
+    private int currentLevel = 1;
+    private static final int TOT_LEVEL = 3;
     
     private enum Direction {
         UP, DOWN, LEFT, RIGHT, NONE
@@ -43,16 +49,24 @@ public class GameBoard extends GridPane {
     private final Image pinkGhostImage = new Image("file:Images/pink_ghost.png");
     private final Image redGhostImage = new Image("file:Images/red_ghost.png");
     
-    public GameBoard(String levelData) {
+    public GameBoard(String levelData, int level) {
         ghostCells = new ArrayList<>();
         currentDirection = Direction.NONE;
         points = 0;
         hasKey = false;
         isGateOpen = false;
+        currentLevel = level;
         
         loadLevel(levelData);
         setupGameLoop();
         setupKeyHandlers();
+        
+        // Add these lines to set the preferred size of the GameBoard
+        setPrefSize(cols * CELL_SIZE, rows * CELL_SIZE);
+        setMinSize(cols * CELL_SIZE, rows * CELL_SIZE);
+        
+        // Optional: Center the game board
+        setAlignment(Pos.CENTER);
     }
     
     private void setupGameLoop() {
@@ -357,8 +371,62 @@ public class GameBoard extends GridPane {
     
     private void gameWon() {
         gameLoop.stop();
-        System.out.println("Game Won! Points: " + points);
-        // You can add more game won handling here, like showing a victory screen
+        
+        if (currentLevel < TOT_LEVEL) {
+            // Load next level
+            currentLevel++;
+            Platform.runLater(() -> {
+                try {
+                    // Load the next level's data using File I/O
+                    String levelData = Files.readString(Path.of("levels/level" + currentLevel + ".txt"));
+                    
+                    // Clear current board
+                    getChildren().clear();
+                    ghostCells.clear();
+                    
+                    // Reset game state
+                    points = 0;
+                    hasKey = false;
+                    isGateOpen = false;
+                    currentDirection = Direction.NONE;
+                    
+                    // Load new level
+                    loadLevel(levelData);
+                    
+                    // Restart game loop
+                    setupGameLoop();
+                    
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        } else {
+            // Final level completed
+            Platform.runLater(() -> {
+                Dialog<ButtonType> dialog = new Dialog<>();
+                dialog.setTitle("Congratulations!");
+                dialog.setHeaderText("You've completed all levels!\nTotal Points: " + points);
+                
+                ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
+                dialog.getDialogPane().getButtonTypes().add(menuButton);
+                
+                // Add the same styling as in gameLost()
+                DialogPane dialogPane = dialog.getDialogPane();
+                // [Add all the styling code from gameLost() here]
+                
+                dialog.showAndWait().ifPresent(response -> {
+                    if (response == menuButton) {
+                        Stage stage = (Stage) getScene().getWindow();
+                        Menu menu = new Menu();
+                        try {
+                            menu.start(stage);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+            });
+        }
     }
     
     private void gameLost() {

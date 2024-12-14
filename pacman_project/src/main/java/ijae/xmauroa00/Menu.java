@@ -124,7 +124,7 @@ public class Menu extends Application {
     private void startGame() {
         try {
             String levelData = Files.readString(Path.of("levels/level1.txt"));
-            gameBoard = new GameBoard(levelData);
+            gameBoard = new GameBoard(levelData, 1);
             gameBoard.setGameSpeed(currentSpeed); // Apply current speed when starting
             
             Stage primaryStage = (Stage) menuContainer.getScene().getWindow();
