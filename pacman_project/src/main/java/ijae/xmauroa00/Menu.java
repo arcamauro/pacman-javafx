@@ -36,14 +36,12 @@ public class Menu extends Application {
         Button startButton = createMenuButton("Start Game");
         Button speedButton = createMenuButton("Speed: Normal");
         Button highScoresButton = createMenuButton("High Scores");
-        Button helpButton = createMenuButton("Help");
         Button exitButton = createMenuButton("Exit");
 
         // Add event handlers
         startButton.setOnAction(e -> startGame());
         speedButton.setOnAction(e -> toggleSpeed(speedButton));
         highScoresButton.setOnAction(e -> showHighScores());
-        helpButton.setOnAction(e -> showHelp());
         exitButton.setOnAction(e -> primaryStage.close());
 
         // Add all elements to container
@@ -52,7 +50,6 @@ public class Menu extends Application {
             startButton,
             speedButton,
             highScoresButton,
-            helpButton,
             exitButton
         );
 
@@ -142,11 +139,7 @@ public class Menu extends Application {
     private void showHighScores() {
         
     }
-
-    private void showHelp() {
-       
-    }
-
+        
     public static void main(String[] args) {
         launch(args);
     }

@@ -36,7 +36,7 @@ public class GameBoard extends GridPane {
     private Timeline gameLoop;
     private Direction currentDirection;
     private int currentLevel = 1;
-    private static final int TOT_LEVEL = 3;
+    private static final int TOT_LEVEL = 2;
     
     private enum Direction {
         UP, DOWN, LEFT, RIGHT, NONE
@@ -529,3 +529,5 @@ public class GameBoard extends GridPane {
         });
     }
 }
+
+
