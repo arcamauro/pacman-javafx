@@ -25,6 +25,11 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+/**
+ * This class represents the game board.
+ * It contains the game logic such as moving the player and ghosts, checking for collisions, and loading levels.
+ * @author Arcangelo Mauro - xmauroa00
+ */
 public class GameBoard extends GridPane {
     private static final int CELL_SIZE = 60;
     private Cell[][] board;
@@ -40,16 +45,25 @@ public class GameBoard extends GridPane {
     private int currentLevel = 1;
     private static final int TOT_LEVEL = 2;
     
+    /**
+     * This enum represents the possible directions the player can move.
+     */
     private enum Direction {
         UP, DOWN, LEFT, RIGHT, NONE
     }
     
-    // Load images
     private final Image playerImage = new Image("file:Images/PacMan.png");
     private final Image orangeGhostImage = new Image("file:Images/orange_ghost.png");
     private final Image redGhostImage = new Image("file:Images/red_ghost.png");
     private final Image keyImage = new Image("file:Images/key.png");
+    private final Image gateImage = new Image("file:Images/gate.png");
     
+    /**
+     * This constructor initializes the game board.
+     * It loads the level data and starts the game loop.
+     * @param levelData the level data, so the level layout
+     * @param level the level number, so the current level number to start from
+     */
     public GameBoard(String levelData, int level) {
         ghostCells = new ArrayList<>();
         currentDirection = Direction.NONE;
@@ -70,12 +84,21 @@ public class GameBoard extends GridPane {
         setAlignment(Pos.CENTER);
     }
     
+    /**
+     * This method sets up the game loop.
+     * It creates a timeline with a key frame that calls the gameStep method every 200 milliseconds.
+     */
     private void setupGameLoop() {
         gameLoop = new Timeline(new KeyFrame(Duration.millis(200), e -> gameStep()));
         gameLoop.setCycleCount(Timeline.INDEFINITE);
         gameLoop.play();
     }
     
+    /**
+     * This method sets the game speed.
+     * It stops the current game loop, creates a new timeline with the given speed, and starts the game loop.
+     * @param speedMillis the speed in milliseconds which changes based on user choice in the menu
+     */
     public void setGameSpeed(double speedMillis) {
         gameLoop.stop();
         gameLoop = new Timeline(new KeyFrame(Duration.millis(speedMillis), e -> gameStep()));
@@ -83,6 +106,10 @@ public class GameBoard extends GridPane {
         gameLoop.play();
     }
     
+    /**
+     * This method sets up the key handlers.
+     * The handlers are used to move the player based on the key pressed on the keyboard.
+     */
     private void setupKeyHandlers() {
         setFocusTraversable(true);
         setOnKeyPressed(e -> {
@@ -95,14 +122,25 @@ public class GameBoard extends GridPane {
         });
     }
     
+    /**
+     * This method is the game loop.
+     * It moves the player and ghosts, checks for collisions, and updates the game state.
+     */
     private void gameStep() {
         movePlayer();
         moveGhosts();
         checkCollisions();
     }
     
+    /**
+     * This method moves the player.
+     * It checks if the player is moving and moves the player in the current direction.
+     */
     private void movePlayer() {
         if (currentDirection == Direction.NONE) return;
+        
+        // Rotate player even if they can't move in that direction
+        rotatePlayer(currentDirection);
         
         int[] newPos = getNewPosition(playerCell, currentDirection);
         if (canMoveTo(newPos[0], newPos[1])) {
@@ -110,6 +148,10 @@ public class GameBoard extends GridPane {
         }
     }
     
+    /**
+     * This method moves the ghosts.
+     * It moves each ghost in a random direction.
+     */
     private void moveGhosts() {
         for (Cell ghostCell : ghostCells) {
             Direction randomDir = getRandomDirection();
@@ -120,11 +162,24 @@ public class GameBoard extends GridPane {
         }
     }
     
+    /**
+     * This method gets a random direction.
+     * This method will be then used to move the ghosts.
+     * It returns a random direction from the Direction enum.
+     * @return a random direction
+     */
     private Direction getRandomDirection() {
         Direction[] directions = Direction.values();
         return directions[(int)(Math.random() * (directions.length - 1))]; // Exclude NONE
     }
     
+    /**
+     * This method gets the new position of the player or ghost.
+     * It calculates the new position based on the current position and the direction.
+     * @param cell the current cell of the player or ghost
+     * @param dir the direction of the player or ghost
+     * @return the new position
+     */
     private int[] getNewPosition(Cell cell, Direction dir) {
         int row = GridPane.getRowIndex(cell);
         int col = GridPane.getColumnIndex(cell);
@@ -138,6 +193,16 @@ public class GameBoard extends GridPane {
         }
     }
     
+    /**
+     * Checks if a move to the specified position is valid.
+     * A move is valid if:
+     * - The position is within board bounds
+     * - The position is not a wall
+     * - If the position is a gate, the player must have the key
+     * @param row the row coordinate to check
+     * @param col the column coordinate to check
+     * @return true if the move is valid, false otherwise
+     */
     private boolean canMoveTo(int row, int col) {
         if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
         Cell targetCell = board[row][col];
@@ -146,6 +211,13 @@ public class GameBoard extends GridPane {
         return true;
     }
     
+    /**
+     * This method moves an entity.
+     * It handles the player collecting items and moving the player or ghost to the new position.
+     * @param entityCell the entity to move
+     * @param newRow the new row coordinate
+     * @param newCol the new column coordinate
+     */
     private void moveEntity(Cell entityCell, int newRow, int newCol) {
         Cell targetCell = board[newRow][newCol];
         
@@ -189,6 +261,11 @@ public class GameBoard extends GridPane {
         board[newRow][newCol] = entityCell;
     }
     
+    /**
+     * This method checks for collisions.
+     * It checks if the player collides with a ghost.
+     * If the player collides with a ghost, the game is lost.
+     */
     private void checkCollisions() {
         int playerRow = GridPane.getRowIndex(playerCell);
         int playerCol = GridPane.getColumnIndex(playerCell);
@@ -204,16 +281,23 @@ public class GameBoard extends GridPane {
         }
     }
     
+    /**
+     * This method loads the level data.
+     * It normalizes the line endings and trims whitespace, then splits the level data into lines.
+     * It checks if the level data has at least 2 lines and if the dimensions are valid.
+     * It then parses the dimensions and creates the board.
+     * @param levelData the level data, so the level layout
+     */
     private void loadLevel(String levelData) {
         // Normalize line endings and trim whitespace
-        String[] lines = levelData.trim().split("\\r?\\n");
+        String[] lines = levelData.lines().toArray(String[]::new);
         
         if (lines.length < 2) {
             throw new IllegalArgumentException("Invalid level format: file must have at least 2 lines");
         }
         
         // Split and parse dimensions, trimming any whitespace
-        String[] dimensions = lines[0].trim().split("\\s+");
+        String[] dimensions = lines[0].trim().split(" ");
         if (dimensions.length != 2) {
             throw new IllegalArgumentException("Invalid dimension format: expected 2 numbers");
         }
@@ -242,6 +326,21 @@ public class GameBoard extends GridPane {
         }
     }
     
+    /**
+     * This method creates a cell.
+     * It creates a cell of the given type and adds it to the board.
+     * The types are:
+     * W - wall
+     * G - gate
+     * P - player
+     * C - ghost
+     * K - key
+     * o - empty field with point
+     * @param type the type of the cell
+     * @param row the row of the cell
+     * @param col the column of the cell
+     * @return the cell
+     */
     private Cell createCell(char type, int row, int col) {
         Cell cell = new Cell(CELL_SIZE);
         
@@ -272,6 +371,11 @@ public class GameBoard extends GridPane {
         return cell;
     }
     
+    /**
+     * This class represents a cell.
+     * It contains the cell's properties such as if it is a wall, gate, player, ghost, key, or point.
+     * @author Arcangelo Mauro - xmauroa00
+     */
     private class Cell extends StackPane {
         private boolean isWall;
         private boolean isGate;
@@ -280,6 +384,11 @@ public class GameBoard extends GridPane {
         private boolean hasKey;
         private boolean hasPoint;
         
+        /**
+         * This constructor initializes the cell.
+         * It creates a rectangle with the given size and adds it to the cell.
+         * @param size the size of the cell
+         */
         public Cell(int size) {
             Rectangle background = new Rectangle(size, size);
             background.setFill(Color.BLACK);
@@ -287,6 +396,9 @@ public class GameBoard extends GridPane {
             getChildren().add(background);
         }
         
+        /**
+         * This method sets the cell to a wall.
+         */
         public void setWall() {
             isWall = true;
             Rectangle wall = new Rectangle(CELL_SIZE, CELL_SIZE);
@@ -294,13 +406,20 @@ public class GameBoard extends GridPane {
             getChildren().add(wall);
         }
         
+        /**
+         * This method sets the cell to the gate.
+         */
         public void setGate() {
             isGate = true;
-            Rectangle gate = new Rectangle(CELL_SIZE, CELL_SIZE);
-            gate.setFill(Color.ORANGE);
-            getChildren().add(gate);
+            ImageView gateView = new ImageView(gateImage);
+            gateView.setFitWidth(CELL_SIZE);
+            gateView.setFitHeight(CELL_SIZE);
+            getChildren().add(gateView);
         }
         
+        /**
+         * This method sets the cell to the player.
+         */
         public void setPlayer() {
             hasPlayer = true;
             ImageView playerView = new ImageView(playerImage);
@@ -310,6 +429,9 @@ public class GameBoard extends GridPane {
             playerCell = this; // Store reference to player cell
         }
         
+        /**
+         * This method sets the cell to a ghost.
+         */
         public void setGhost() {
             hasGhost = true;
             Image ghostImage = getRandomGhostImage();
@@ -320,6 +442,11 @@ public class GameBoard extends GridPane {
             ghostCells.add(this); // Add to ghost cells list
         }
         
+        /**
+         * This method gets a random ghost image.
+         * It returns a random ghost image from the ghostImages array.
+         * @return a random ghost image
+         */
         private Image getRandomGhostImage() {
             Image[] ghostImages = {
                 redGhostImage,
@@ -329,6 +456,9 @@ public class GameBoard extends GridPane {
             return ghostImages[randomIndex];
         }
         
+        /**
+         * This method sets the cell to a key.
+         */
         public void setKey() {
             hasKey = true;
             ImageView keyView = new ImageView(keyImage);
@@ -337,6 +467,9 @@ public class GameBoard extends GridPane {
             getChildren().add(keyView);
         }
         
+        /**
+         * This method sets the cell to a point.
+         */
         public void setPoint() {
             hasPoint = true;
             Rectangle point = new Rectangle(CELL_SIZE/4, CELL_SIZE/4);
@@ -344,6 +477,9 @@ public class GameBoard extends GridPane {
             getChildren().add(point);
         }
         
+        /**
+         * This method sets the cell to an empty field.
+         */
         public void setEmpty() {
             Rectangle background = new Rectangle(CELL_SIZE, CELL_SIZE);
             background.setFill(Color.BLACK);
@@ -352,6 +488,9 @@ public class GameBoard extends GridPane {
             getChildren().add(background);
         }
         
+        /**
+         * This method removes the point from the cell.
+         */
         public void removePoint() {
             hasPoint = false;
             // Remove the point visual (last child in the stack)
@@ -360,6 +499,9 @@ public class GameBoard extends GridPane {
             }
         }
         
+        /**
+         * This method removes the key from the cell.
+         */
         public void removeKey() {
             hasKey = false;
             // Remove the key visual (last child in the stack)
@@ -369,6 +511,10 @@ public class GameBoard extends GridPane {
         }
     }
     
+    /**
+     * This method is called when the player wins the game.
+     * It stops the game loop, loads the next level, and restarts the game loop.
+     */
     private void gameWon() {
         gameLoop.stop();
         
@@ -432,6 +578,11 @@ public class GameBoard extends GridPane {
         }
     }
     
+    /**
+     * This method is called when the player loses the game.
+     * It stops the game loop, saves the score, and shows a dialog with the score.
+     * In the dialog the player can choose to return to the menu or restart from level 1.
+     */
     private void gameLost() {
         gameLoop.stop();
         
@@ -548,6 +699,20 @@ public class GameBoard extends GridPane {
             });
         });
     }
+    
+    /**
+     * Rotates the player image based on the movement direction.
+     * @param direction the direction the player is moving
+     */
+    private void rotatePlayer(Direction direction) {
+        ImageView playerView = (ImageView) playerCell.getChildren().get(playerCell.getChildren().size() - 1);
+        
+        switch (direction) {
+            case UP:    playerView.setRotate(90); break;
+            case DOWN:  playerView.setRotate(270);  break;
+            case LEFT:  playerView.setRotate(0); break;
+            case RIGHT: playerView.setRotate(180);   break;
+            default: break;
+        }
+    }
 }
-
-

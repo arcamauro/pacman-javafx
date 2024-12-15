@@ -22,12 +22,12 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-/*
+/**
  * This is the main menu of the game.
  * It contains the main entry point for the game.
  * It allows the user to select the game mode, speed, and upload levels.
  * It also allows the user to view high scores.
- * @author Arcangelo Mauro
+ * @author Arcangelo Mauro - xmauroa00
  */
 
 public class Menu extends Application {
@@ -38,7 +38,7 @@ public class Menu extends Application {
     private GameBoard gameBoard;
     private double currentSpeed = 200; // Store current speed
 
-    /*
+    /**
      * This is the main entry point for the game.
      * It creates the main menu and allows the user to select the game mode, speed, and upload levels.
      * It also allows the user to view high scores and exit the game.
@@ -88,7 +88,7 @@ public class Menu extends Application {
         primaryStage.show();
     }
 
-    /*
+    /**
      * This method creates a button with the given text.
      * It also adds hover effects to the button with simple css styles.
      * @param text the text to display on the button
@@ -128,7 +128,7 @@ public class Menu extends Application {
         return button;
     }
 
-    /*
+    /**
      * This method toggles the speed of the game.
      * It changes the speed of the game between fast, slow, and normal.
      * @param speedButton the button to toggle the speed
@@ -154,7 +154,7 @@ public class Menu extends Application {
         }
     }
 
-    /*
+    /**
      * This method starts the game.
      * It makes a mode selection dialog and allows the user to select the game mode.
      */
@@ -201,7 +201,7 @@ public class Menu extends Application {
         modeSelect.showAndWait();
     }
 
-    /*
+    /**
      * This method starts the story mode.
      * It loads the level1.txt, which is the first level of the game, and starts the game.
      */
@@ -220,7 +220,7 @@ public class Menu extends Application {
         }
     }
 
-    /*
+    /**
      * This method shows the custom levels when choosing from the menu.
      * It loads all the custom levels from the levels directory and allows the user to select a level.
      */
@@ -296,7 +296,7 @@ public class Menu extends Application {
         }
     }
 
-    /*
+    /**
      * This method shows the high scores when choosing from the menu.
      * It loads the high scores from a file called highscores.txt and displays them.
      */
@@ -346,7 +346,7 @@ public class Menu extends Application {
     private static final String HIGH_SCORES_FILE = "highscores.txt";
     private static final int MAX_HIGH_SCORES = 5;
 
-    /*
+    /**
      * This method saves the high score to the highscores.txt file.
      * It also keeps the top 5 high scores.
      * @param score the score to save
@@ -388,7 +388,7 @@ public class Menu extends Application {
         }
     }
 
-    /*
+    /**
      * This method reads the high scores from the highscores.txt file.
      * It also formats the high scores to be displayed in the high scores window.
      * @return the high scores
@@ -404,7 +404,7 @@ public class Menu extends Application {
         return scores;
     }
 
-    /*
+    /**
      * This method allows the user to upload a level file.
      * It allows the user to select a level file from the file chooser and validates it.
      * @param primaryStage the primary stage for the game
@@ -471,7 +471,7 @@ public class Menu extends Application {
         }
     }
 
-    /*
+    /**
      * This method validates the level file format.
      * It checks if the level file is in the correct format.
      * @param content the level file content
@@ -512,7 +512,7 @@ public class Menu extends Application {
         }
     }
 
-    /*
+    /**
      * This method shows a confirmation dialog.
      * It shows a confirmation dialog with the given title and content.
      * @param title the title of the dialog
@@ -543,7 +543,7 @@ public class Menu extends Application {
         return alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
     }
 
-    /*
+    /**
      * This method shows an alert.
      * It shows an alert with the given type, title, header, and content.
      * @param type the type of the alert
@@ -567,7 +567,7 @@ public class Menu extends Application {
         alert.showAndWait();
     }
 
-    /*
+    /**
      * This method is the main entry point for the game.
      * It launches the game.
      */
