@@ -148,4 +148,26 @@ public class Cell extends StackPane {
     public boolean hasPoint() { return hasPoint; }
     public static int getCellSize() { return CELL_SIZE; }
     public static Image getPlayerImage() { return playerImage; }
+    
+    // Add this method to get the current ghost image
+    public Image getGhostImage() {
+        for (javafx.scene.Node node : getChildren()) {
+            if (node instanceof ImageView) {
+                ImageView imageView = (ImageView) node;
+                if (imageView.getImage() == redGhostImage || imageView.getImage() == orangeGhostImage) {
+                    return imageView.getImage();
+                }
+            }
+        }
+        return null;
+    }
+    
+    // Add this method to set ghost with specific image
+    public void setGhostWithImage(Image ghostImage) {
+        hasGhost = true;
+        ImageView ghostView = new ImageView(ghostImage);
+        ghostView.setFitWidth(CELL_SIZE);
+        ghostView.setFitHeight(CELL_SIZE);
+        getChildren().add(ghostView);
+    }
 }

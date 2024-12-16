@@ -268,8 +268,8 @@ public class GameBoard extends GridPane {
             if (entityCell.hasKey()) newSourceCell.setKey();
             if (entityCell.isGate()) newSourceCell.setGate();
             
-            // Add ghost to target cell
-            newTargetCell.setGhost();
+            // Preserve the ghost's color by copying the ghost image from the original cell
+            newTargetCell.setGhostWithImage(entityCell.getGhostImage());
             
             // Remove old cells from GridPane
             getChildren().remove(entityCell);
