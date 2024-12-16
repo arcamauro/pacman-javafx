@@ -208,7 +208,7 @@ public class Menu extends Application {
     private void startStoryMode() {
         try {
             String levelData = Files.readString(Path.of("levels/level1.txt"));
-            gameBoard = new GameBoard(levelData, 1);
+            gameBoard = new GameBoard(levelData, 1, true);
             gameBoard.setGameSpeed(currentSpeed);
             
             Stage primaryStage = (Stage) menuContainer.getScene().getWindow();
@@ -260,7 +260,7 @@ public class Menu extends Application {
                     levelButton.setOnAction(e -> {
                         try {
                             String levelData = Files.readString(levelFile.toPath());
-                            gameBoard = new GameBoard(levelData, 1);
+                            gameBoard = new GameBoard(levelData, 1, false);
                             gameBoard.setGameSpeed(currentSpeed);
                             
                             Stage primaryStage = (Stage) menuContainer.getScene().getWindow();

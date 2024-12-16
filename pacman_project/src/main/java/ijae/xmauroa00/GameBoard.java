@@ -44,6 +44,7 @@ public class GameBoard extends GridPane {
     private Direction currentDirection;
     private int currentLevel = 1;
     private static final int TOT_LEVEL = 2;
+    private boolean isStoryMode;
     
     /**
      * This enum represents the possible directions the player can move.
@@ -63,24 +64,22 @@ public class GameBoard extends GridPane {
      * It loads the level data and starts the game loop.
      * @param levelData the level data, so the level layout
      * @param level the level number, so the current level number to start from
+     * @param isStoryMode whether the game is in story mode
      */
-    public GameBoard(String levelData, int level) {
+    public GameBoard(String levelData, int level, boolean isStoryMode) {
         ghostCells = new ArrayList<>();
         currentDirection = Direction.NONE;
         points = 0;
         hasKey = false;
         isGateOpen = false;
         currentLevel = level;
-        
+        this.isStoryMode = isStoryMode;
         loadLevel(levelData);
         setupGameLoop();
         setupKeyHandlers();
         
-        // Add these lines to set the preferred size of the GameBoard
         setPrefSize(cols * CELL_SIZE, rows * CELL_SIZE);
         setMinSize(cols * CELL_SIZE, rows * CELL_SIZE);
-        
-        // Optional: Center the game board
         setAlignment(Pos.CENTER);
     }
     
@@ -597,8 +596,14 @@ public class GameBoard extends GridPane {
             
             // Add buttons
             ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
-            ButtonType restartButton = new ButtonType("Restart from Level 1", ButtonBar.ButtonData.OTHER);
-            dialog.getDialogPane().getButtonTypes().addAll(menuButton, restartButton);
+            dialog.getDialogPane().getButtonTypes().add(menuButton);
+            
+            // Add restart button only if in story mode
+            ButtonType restartButton = null;
+            if (isStoryMode) {
+                restartButton = new ButtonType("Restart from Level 1", ButtonBar.ButtonData.OTHER);
+                dialog.getDialogPane().getButtonTypes().add(restartButton);
+            }
             
             // Style the dialog
             DialogPane dialogPane = dialog.getDialogPane();
@@ -674,6 +679,7 @@ public class GameBoard extends GridPane {
             }
             
             // Show dialog and handle result
+            ButtonType finalRestartButton = restartButton; // Need final reference for lambda
             dialog.showAndWait().ifPresent(response -> {
                 Stage stage = (Stage) getScene().getWindow();
                 if (response == menuButton) {
@@ -684,11 +690,11 @@ public class GameBoard extends GridPane {
                     } catch (Exception e) {
                         System.out.println("Error returning to menu");
                     }
-                } else if (response == restartButton) {
+                } else if (response == finalRestartButton) {
                     // Restart from level 1
                     try {
                         String levelData = Files.readString(Path.of("levels/level1.txt"));
-                        GameBoard newGame = new GameBoard(levelData, 1);
+                        GameBoard newGame = new GameBoard(levelData, 1, true);
                         Scene gameScene = new Scene(newGame);
                         stage.setScene(gameScene);
                         newGame.requestFocus();
