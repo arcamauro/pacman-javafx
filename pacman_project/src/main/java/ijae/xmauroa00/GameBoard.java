@@ -141,6 +141,9 @@ public class GameBoard extends GridPane {
      * It moves each ghost in a random direction.
      */
     private void moveGhosts() {
+        List<Cell> ghostCellsCopy = new ArrayList<>(ghostCells);
+        
+        for (Cell ghostCell : ghostCellsCopy) {
             Direction randomDir = getRandomDirection();
             int[] newPos = getNewPosition(ghostCell, randomDir);
             if (canMoveTo(newPos[0], newPos[1])) {
@@ -239,22 +242,15 @@ public class GameBoard extends GridPane {
         int oldRow = GridPane.getRowIndex(entityCell);
         int oldCol = GridPane.getColumnIndex(entityCell);
         
-            getChildren().remove(entityCell);
-            add(entityCell, newCol, newRow);
-            board[oldRow][oldCol] = new Cell(); // Create new empty cell
-            board[oldRow][oldCol].setEmpty();
-            add(board[oldRow][oldCol], oldCol, oldRow);
-            board[newRow][newCol] = entityCell;
-        } else {
-            getChildren().remove(entityCell);
-            getChildren().remove(targetCell);
-            add(entityCell, newCol, newRow);
-            add(targetCell, oldCol, oldRow);
-            
-            // Update board array
-            board[oldRow][oldCol] = targetCell;
-            board[newRow][newCol] = entityCell;
-        }
+        // Move ghost similar to player movement
+        getChildren().remove(entityCell);
+        getChildren().remove(targetCell);
+        add(entityCell, newCol, newRow);
+        add(targetCell, oldCol, oldRow);
+        
+        // Update board array
+        board[oldRow][oldCol] = targetCell;
+        board[newRow][newCol] = entityCell;
     }
     
     /**
