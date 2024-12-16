@@ -230,27 +230,61 @@ public class GameBoard extends GridPane {
                 gameLost();
                 return;
             }
+            
+            // Get current position for player
+            int oldRow = GridPane.getRowIndex(entityCell);
+            int oldCol = GridPane.getColumnIndex(entityCell);
+            
+            // Update the board array
+            board[oldRow][oldCol] = targetCell;
+            board[newRow][newCol] = entityCell;
+            
+            // Update GridPane
+            GridPane.setRowIndex(entityCell, newRow);
+            GridPane.setColumnIndex(entityCell, newCol);
+            GridPane.setRowIndex(targetCell, oldRow);
+            GridPane.setColumnIndex(targetCell, oldCol);
+            
+        } else if (entityCell.hasGhost()) {
+            // For ghosts, only move the ghost image while preserving other elements
+            if (board[newRow][newCol] == playerCell) {
+                gameLost();
+                return;
+            }
+            
+            // Get current position
+            int oldRow = GridPane.getRowIndex(entityCell);
+            int oldCol = GridPane.getColumnIndex(entityCell);
+            
+            // Create new cells preserving the original elements
+            Cell newSourceCell = new Cell();  // Empty cell for where ghost was
+            Cell newTargetCell = new Cell();  // New cell with ghost for destination
+            
+            // Copy any points, keys, or gates from the cells
+            if (targetCell.hasPoint()) newTargetCell.setPoint();
+            if (targetCell.hasKey()) newTargetCell.setKey();
+            if (targetCell.isGate()) newTargetCell.setGate();
+            if (entityCell.hasPoint()) newSourceCell.setPoint();
+            if (entityCell.hasKey()) newSourceCell.setKey();
+            if (entityCell.isGate()) newSourceCell.setGate();
+            
+            // Add ghost to target cell
+            newTargetCell.setGhost();
+            
+            // Remove old cells from GridPane
+            getChildren().remove(entityCell);
+            getChildren().remove(targetCell);
+            
+            // Add new cells to GridPane
+            add(newSourceCell, oldCol, oldRow);
+            add(newTargetCell, newCol, newRow);
+            
+            // Update board array and ghost list
+            board[oldRow][oldCol] = newSourceCell;
+            board[newRow][newCol] = newTargetCell;
+            ghostCells.remove(entityCell);
+            ghostCells.add(newTargetCell);
         }
-        
-        // Check if a ghost is moving onto the player
-        if (entityCell.hasGhost() && board[newRow][newCol] == playerCell) {
-            gameLost();
-            return;
-        }
-        
-        // Get current position
-        int oldRow = GridPane.getRowIndex(entityCell);
-        int oldCol = GridPane.getColumnIndex(entityCell);
-        
-        // Move ghost similar to player movement
-        getChildren().remove(entityCell);
-        getChildren().remove(targetCell);
-        add(entityCell, newCol, newRow);
-        add(targetCell, oldCol, oldRow);
-        
-        // Update board array
-        board[oldRow][oldCol] = targetCell;
-        board[newRow][newCol] = entityCell;
     }
     
     /**
