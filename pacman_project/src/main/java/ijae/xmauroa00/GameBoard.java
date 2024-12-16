@@ -16,12 +16,8 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -145,7 +141,6 @@ public class GameBoard extends GridPane {
      * It moves each ghost in a random direction.
      */
     private void moveGhosts() {
-        for (Cell ghostCell : ghostCells) {
             Direction randomDir = getRandomDirection();
             int[] newPos = getNewPosition(ghostCell, randomDir);
             if (canMoveTo(newPos[0], newPos[1])) {
@@ -244,8 +239,6 @@ public class GameBoard extends GridPane {
         int oldRow = GridPane.getRowIndex(entityCell);
         int oldCol = GridPane.getColumnIndex(entityCell);
         
-        // If target is a gate, don't swap cells
-        if (targetCell.isGate()) {
             getChildren().remove(entityCell);
             add(entityCell, newCol, newRow);
             board[oldRow][oldCol] = new Cell(); // Create new empty cell
@@ -253,7 +246,6 @@ public class GameBoard extends GridPane {
             add(board[oldRow][oldCol], oldCol, oldRow);
             board[newRow][newCol] = entityCell;
         } else {
-            // Normal cell swap
             getChildren().remove(entityCell);
             getChildren().remove(targetCell);
             add(entityCell, newCol, newRow);
