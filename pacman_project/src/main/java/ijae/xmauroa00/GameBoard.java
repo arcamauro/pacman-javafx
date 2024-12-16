@@ -233,31 +233,43 @@ public class GameBoard extends GridPane {
             }
             if (targetCell.isGate && hasKey) {
                 gameWon();
-                return;  // Stop here if game is won
+                return;
             }
-            if (targetCell.hasGhost) {  // Check if moving onto a ghost
+            if (targetCell.hasGhost) {
                 gameLost();
-                return;  // Stop here if collision occurs
+                return;
             }
         }
         
         // Check if a ghost is moving onto the player
         if (entityCell.hasGhost && board[newRow][newCol] == playerCell) {
             gameLost();
-            return;  // Stop here if collision occurs
+            return;
         }
         
-        // Swap cells
+        // Get current position
         int oldRow = GridPane.getRowIndex(entityCell);
         int oldCol = GridPane.getColumnIndex(entityCell);
-        getChildren().remove(entityCell);
-        getChildren().remove(targetCell);
-        add(entityCell, newCol, newRow);
-        add(targetCell, oldCol, oldRow);
         
-        // Update board array
-        board[oldRow][oldCol] = targetCell;
-        board[newRow][newCol] = entityCell;
+        // If target is a gate, don't swap cells
+        if (targetCell.isGate) {
+            getChildren().remove(entityCell);
+            add(entityCell, newCol, newRow);
+            board[oldRow][oldCol] = new Cell(CELL_SIZE); // Create new empty cell
+            board[oldRow][oldCol].setEmpty();
+            add(board[oldRow][oldCol], oldCol, oldRow);
+            board[newRow][newCol] = entityCell;
+        } else {
+            // Normal cell swap
+            getChildren().remove(entityCell);
+            getChildren().remove(targetCell);
+            add(entityCell, newCol, newRow);
+            add(targetCell, oldCol, oldRow);
+            
+            // Update board array
+            board[oldRow][oldCol] = targetCell;
+            board[newRow][newCol] = entityCell;
+        }
     }
     
     /**
@@ -585,60 +597,85 @@ public class GameBoard extends GridPane {
     private void gameLost() {
         gameLoop.stop();
         
-        Platform.runLater(() -> {
-            // Save the score
-            Menu.saveHighScore(points);
-            
-            // Create dialog
-            Dialog<ButtonType> dialog = new Dialog<>();
-            dialog.setTitle("Game Over");
-            dialog.setHeaderText("Game Over!\nPoints: " + points);
-            
-            // Add buttons
-            ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
-            dialog.getDialogPane().getButtonTypes().add(menuButton);
-            
-            // Add restart button only if in story mode
-            ButtonType restartButton = null;
-            if (isStoryMode) {
-                restartButton = new ButtonType("Restart from Level 1", ButtonBar.ButtonData.OTHER);
-                dialog.getDialogPane().getButtonTypes().add(restartButton);
-            }
-            
-            // Style the dialog
-            DialogPane dialogPane = dialog.getDialogPane();
-            
-            // Main dialog styling
-            dialogPane.setStyle(
-                "-fx-background-color: #000000;" +
-                "-fx-border-color: #FFD700;" +  // Gold border
-                "-fx-border-width: 3px;"
+        // Save the score
+        Menu.saveHighScore(points);
+        
+        // Create dialog
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Game Over");
+        dialog.setHeaderText("Game Over!\nPoints: " + points);
+        
+        // Add buttons
+        ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().add(menuButton);
+        
+        // Add restart button only if in story mode
+        ButtonType restartButton = null;
+        if (isStoryMode) {
+            restartButton = new ButtonType("Restart from Level 1", ButtonBar.ButtonData.OTHER);
+            dialog.getDialogPane().getButtonTypes().add(restartButton);
+        }
+        
+        // Style the dialog
+        DialogPane dialogPane = dialog.getDialogPane();
+        
+        // Main dialog styling
+        dialogPane.setStyle(
+            "-fx-background-color: #000000;" +
+            "-fx-border-color: #FFD700;" +  // Gold border
+            "-fx-border-width: 3px;"
+        );
+        
+        // Header styling
+        dialogPane.lookup(".header-panel").setStyle(
+            "-fx-background-color: #000000;" +
+            "-fx-border-color: #FFD700;" +  // Gold border
+            "-fx-border-width: 0 0 2 0;"    // Bottom border only
+        );
+        
+        dialogPane.lookup(".header-panel .label").setStyle(
+            "-fx-text-fill: #FF0000;" +     // Red text
+            "-fx-font-size: 28px;" +
+            "-fx-font-weight: bold;" +
+            "-fx-font-family: 'Arial';"
+        );
+        
+        // Content styling
+        dialogPane.lookup(".content.label").setStyle(
+            "-fx-text-fill: #FFFFFF;" +     // White text
+            "-fx-font-size: 20px;" +
+            "-fx-font-family: 'Arial';"
+        );
+        
+        // Style both buttons
+        for (ButtonType buttonType : dialog.getDialogPane().getButtonTypes()) {
+            Button button = (Button) dialogPane.lookupButton(buttonType);
+            button.setStyle(
+                "-fx-background-color: #0000FF;" +
+                "-fx-text-fill: #FFFFFF;" +
+                "-fx-font-size: 16px;" +
+                "-fx-min-width: 150px;" +
+                "-fx-min-height: 40px;" +
+                "-fx-background-radius: 20;" +
+                "-fx-border-radius: 20;" +
+                "-fx-cursor: hand;"
             );
             
-            // Header styling
-            dialogPane.lookup(".header-panel").setStyle(
-                "-fx-background-color: #000000;" +
-                "-fx-border-color: #FFD700;" +  // Gold border
-                "-fx-border-width: 0 0 2 0;"    // Bottom border only
+            // Add hover effect to buttons
+            button.setOnMouseEntered(e -> 
+                button.setStyle(
+                    "-fx-background-color: #000080;" +
+                    "-fx-text-fill: #FFD700;" +
+                    "-fx-font-size: 16px;" +
+                    "-fx-min-width: 150px;" +
+                    "-fx-min-height: 40px;" +
+                    "-fx-background-radius: 20;" +
+                    "-fx-border-radius: 20;" +
+                    "-fx-cursor: hand;"
+                )
             );
             
-            dialogPane.lookup(".header-panel .label").setStyle(
-                "-fx-text-fill: #FF0000;" +     // Red text
-                "-fx-font-size: 28px;" +
-                "-fx-font-weight: bold;" +
-                "-fx-font-family: 'Arial';"
-            );
-            
-            // Content styling
-            dialogPane.lookup(".content.label").setStyle(
-                "-fx-text-fill: #FFFFFF;" +     // White text
-                "-fx-font-size: 20px;" +
-                "-fx-font-family: 'Arial';"
-            );
-            
-            // Style both buttons
-            for (ButtonType buttonType : dialog.getDialogPane().getButtonTypes()) {
-                Button button = (Button) dialogPane.lookupButton(buttonType);
+            button.setOnMouseExited(e -> 
                 button.setStyle(
                     "-fx-background-color: #0000FF;" +
                     "-fx-text-fill: #FFFFFF;" +
@@ -648,62 +685,39 @@ public class GameBoard extends GridPane {
                     "-fx-background-radius: 20;" +
                     "-fx-border-radius: 20;" +
                     "-fx-cursor: hand;"
-                );
-                
-                // Add hover effect to buttons
-                button.setOnMouseEntered(e -> 
-                    button.setStyle(
-                        "-fx-background-color: #000080;" +
-                        "-fx-text-fill: #FFD700;" +
-                        "-fx-font-size: 16px;" +
-                        "-fx-min-width: 150px;" +
-                        "-fx-min-height: 40px;" +
-                        "-fx-background-radius: 20;" +
-                        "-fx-border-radius: 20;" +
-                        "-fx-cursor: hand;"
-                    )
-                );
-                
-                button.setOnMouseExited(e -> 
-                    button.setStyle(
-                        "-fx-background-color: #0000FF;" +
-                        "-fx-text-fill: #FFFFFF;" +
-                        "-fx-font-size: 16px;" +
-                        "-fx-min-width: 150px;" +
-                        "-fx-min-height: 40px;" +
-                        "-fx-background-radius: 20;" +
-                        "-fx-border-radius: 20;" +
-                        "-fx-cursor: hand;"
-                    )
-                );
-            }
+                )
+            );
+        }
+        
+        // Show dialog and handle result
+        ButtonType finalRestartButton = restartButton;
+        Stage stage = (Stage) getScene().getWindow();
+        
+        dialog.setOnCloseRequest(event -> {
+            dialog.close();
+            ButtonType result = dialog.getResult();
             
-            // Show dialog and handle result
-            ButtonType finalRestartButton = restartButton; // Need final reference for lambda
-            dialog.showAndWait().ifPresent(response -> {
-                Stage stage = (Stage) getScene().getWindow();
-                if (response == menuButton) {
-                    // Return to menu
-                    Menu menu = new Menu();
-                    try {
-                        menu.start(stage);
-                    } catch (Exception e) {
-                        System.out.println("Error returning to menu");
-                    }
-                } else if (response == finalRestartButton) {
-                    // Restart from level 1
-                    try {
-                        String levelData = Files.readString(Path.of("levels/level1.txt"));
-                        GameBoard newGame = new GameBoard(levelData, 1, true);
-                        Scene gameScene = new Scene(newGame);
-                        stage.setScene(gameScene);
-                        newGame.requestFocus();
-                    } catch (IOException e) {
-                        System.out.println("Error restarting from level 1");
-                    }
+            if (result == menuButton) {
+                Menu menu = new Menu();
+                try {
+                    menu.start(stage);
+                } catch (Exception e) {
+                    System.out.println("Error returning to menu");
                 }
-            });
+            } else if (result == finalRestartButton) {
+                try {
+                    String levelData = Files.readString(Path.of("levels/level1.txt"));
+                    GameBoard newGame = new GameBoard(levelData, 1, true);
+                    Scene gameScene = new Scene(newGame);
+                    stage.setScene(gameScene);
+                    newGame.requestFocus();
+                } catch (IOException e) {
+                    System.out.println("Error restarting from level 1");
+                }
+            }
         });
+        
+        dialog.show();
     }
     
     /**
