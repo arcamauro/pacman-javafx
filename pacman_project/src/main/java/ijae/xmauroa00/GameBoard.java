@@ -31,7 +31,6 @@ import javafx.util.Duration;
  * @author Arcangelo Mauro - xmauroa00
  */
 public class GameBoard extends GridPane {
-    private static final int CELL_SIZE = 60;
     private Cell[][] board;
     private int rows;
     private int cols;
@@ -53,12 +52,6 @@ public class GameBoard extends GridPane {
         UP, DOWN, LEFT, RIGHT, NONE
     }
     
-    private final Image playerImage = new Image("file:Images/PacMan.png");
-    private final Image orangeGhostImage = new Image("file:Images/orange_ghost.png");
-    private final Image redGhostImage = new Image("file:Images/red_ghost.png");
-    private final Image keyImage = new Image("file:Images/key.png");
-    private final Image gateImage = new Image("file:Images/gate.png");
-    
     /**
      * This constructor initializes the game board.
      * It loads the level data and starts the game loop.
@@ -78,8 +71,8 @@ public class GameBoard extends GridPane {
         setupGameLoop();
         setupKeyHandlers();
         
-        setPrefSize(cols * CELL_SIZE, rows * CELL_SIZE);
-        setMinSize(cols * CELL_SIZE, rows * CELL_SIZE);
+        setPrefSize(cols * Cell.getCellSize(), rows * Cell.getCellSize());
+        setMinSize(cols * Cell.getCellSize(), rows * Cell.getCellSize());
         setAlignment(Pos.CENTER);
     }
     
@@ -205,8 +198,8 @@ public class GameBoard extends GridPane {
     private boolean canMoveTo(int row, int col) {
         if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
         Cell targetCell = board[row][col];
-        if (targetCell.isWall) return false;
-        if (targetCell.isGate && !hasKey) return false;
+        if (targetCell.isWall()) return false;
+        if (targetCell.isGate() && !hasKey) return false;
         return true;
     }
     
@@ -222,27 +215,27 @@ public class GameBoard extends GridPane {
         
         // Handle player collecting items
         if (entityCell == playerCell) {
-            if (targetCell.hasPoint) {
+            if (targetCell.hasPoint()) {
                 points += 10;
                 targetCell.removePoint();
             }
-            if (targetCell.hasKey) {
+            if (targetCell.hasKey()) {
                 hasKey = true;
                 isGateOpen = true;
                 targetCell.removeKey();
             }
-            if (targetCell.isGate && hasKey) {
+            if (targetCell.isGate() && hasKey) {
                 gameWon();
                 return;
             }
-            if (targetCell.hasGhost) {
+            if (targetCell.hasGhost()) {
                 gameLost();
                 return;
             }
         }
         
         // Check if a ghost is moving onto the player
-        if (entityCell.hasGhost && board[newRow][newCol] == playerCell) {
+        if (entityCell.hasGhost() && board[newRow][newCol] == playerCell) {
             gameLost();
             return;
         }
@@ -252,10 +245,10 @@ public class GameBoard extends GridPane {
         int oldCol = GridPane.getColumnIndex(entityCell);
         
         // If target is a gate, don't swap cells
-        if (targetCell.isGate) {
+        if (targetCell.isGate()) {
             getChildren().remove(entityCell);
             add(entityCell, newCol, newRow);
-            board[oldRow][oldCol] = new Cell(CELL_SIZE); // Create new empty cell
+            board[oldRow][oldCol] = new Cell(); // Create new empty cell
             board[oldRow][oldCol].setEmpty();
             add(board[oldRow][oldCol], oldCol, oldRow);
             board[newRow][newCol] = entityCell;
@@ -353,173 +346,26 @@ public class GameBoard extends GridPane {
      * @return the cell
      */
     private Cell createCell(char type, int row, int col) {
-        Cell cell = new Cell(CELL_SIZE);
+        Cell cell = new Cell();
         
         switch (type) {
-            case 'W':
-                cell.setWall();
+            case 'W': cell.setWall(); break;
+            case 'G': cell.setGate(); break;
+            case 'P': 
+                cell.setPlayer(); 
+                playerCell = cell;
                 break;
-            case 'G':
-                cell.setGate();
-                break;
-            case 'P':
-                cell.setPlayer();
-                break;
-            case 'C':
+            case 'C': 
                 cell.setGhost();
+                ghostCells.add(cell);
                 break;
-            case 'K':
-                cell.setKey();
-                break;
-            case 'o':
-                cell.setPoint();
-                break;
-            default:
-                cell.setEmpty();
+            case 'K': cell.setKey(); break;
+            case 'o': cell.setPoint(); break;
+            default: cell.setEmpty();
         }
         
         add(cell, col, row);
         return cell;
-    }
-    
-    /**
-     * This class represents a cell.
-     * It contains the cell's properties such as if it is a wall, gate, player, ghost, key, or point.
-     * @author Arcangelo Mauro - xmauroa00
-     */
-    private class Cell extends StackPane {
-        private boolean isWall;
-        private boolean isGate;
-        private boolean hasPlayer;
-        private boolean hasGhost;
-        private boolean hasKey;
-        private boolean hasPoint;
-        
-        /**
-         * This constructor initializes the cell.
-         * It creates a rectangle with the given size and adds it to the cell.
-         * @param size the size of the cell
-         */
-        public Cell(int size) {
-            Rectangle background = new Rectangle(size, size);
-            background.setFill(Color.BLACK);
-            background.setStroke(Color.BLUE);
-            getChildren().add(background);
-        }
-        
-        /**
-         * This method sets the cell to a wall.
-         */
-        public void setWall() {
-            isWall = true;
-            Rectangle wall = new Rectangle(CELL_SIZE, CELL_SIZE);
-            wall.setFill(Color.BLUE);
-            getChildren().add(wall);
-        }
-        
-        /**
-         * This method sets the cell to the gate.
-         */
-        public void setGate() {
-            isGate = true;
-            ImageView gateView = new ImageView(gateImage);
-            gateView.setFitWidth(CELL_SIZE);
-            gateView.setFitHeight(CELL_SIZE);
-            getChildren().add(gateView);
-        }
-        
-        /**
-         * This method sets the cell to the player.
-         */
-        public void setPlayer() {
-            hasPlayer = true;
-            ImageView playerView = new ImageView(playerImage);
-            playerView.setFitWidth(CELL_SIZE);
-            playerView.setFitHeight(CELL_SIZE);
-            getChildren().add(playerView);
-            playerCell = this; // Store reference to player cell
-        }
-        
-        /**
-         * This method sets the cell to a ghost.
-         */
-        public void setGhost() {
-            hasGhost = true;
-            Image ghostImage = getRandomGhostImage();
-            ImageView ghostView = new ImageView(ghostImage);
-            ghostView.setFitWidth(CELL_SIZE);
-            ghostView.setFitHeight(CELL_SIZE);
-            getChildren().add(ghostView);
-            ghostCells.add(this); // Add to ghost cells list
-        }
-        
-        /**
-         * This method gets a random ghost image.
-         * It returns a random ghost image from the ghostImages array.
-         * @return a random ghost image
-         */
-        private Image getRandomGhostImage() {
-            Image[] ghostImages = {
-                redGhostImage,
-                orangeGhostImage,
-            };
-            int randomIndex = (int) (Math.random() * ghostImages.length);
-            return ghostImages[randomIndex];
-        }
-        
-        /**
-         * This method sets the cell to a key.
-         */
-        public void setKey() {
-            hasKey = true;
-            ImageView keyView = new ImageView(keyImage);
-            keyView.setFitWidth(CELL_SIZE/2);
-            keyView.setFitHeight(CELL_SIZE/2);
-            getChildren().add(keyView);
-        }
-        
-        /**
-         * This method sets the cell to a point.
-         */
-        public void setPoint() {
-            hasPoint = true;
-            Rectangle point = new Rectangle(CELL_SIZE/4, CELL_SIZE/4);
-            point.setFill(Color.WHITE);
-            getChildren().add(point);
-        }
-        
-        /**
-         * This method sets the cell to an empty field.
-         */
-        public void setEmpty() {
-            Rectangle background = new Rectangle(CELL_SIZE, CELL_SIZE);
-            background.setFill(Color.BLACK);
-            background.setStroke(Color.BLUE);
-            background.setStrokeWidth(0.5);
-            getChildren().add(background);
-        }
-        
-        /**
-         * This method removes the point from the cell.
-         */
-        public void removePoint() {
-            hasPoint = false;
-            // Remove the point visual (last child in the stack)
-            if (getChildren().size() > 1) {
-                getChildren().remove(getChildren().size() - 1);
-            }
-        }
-        
-        /**
-         * This method removes the key from the cell.
-         */
-        public void removeKey() {
-            hasKey = false;
-            // Remove the key visual (last child in the stack)
-            if (getChildren().size() > 1) {
-                getChildren().remove(getChildren().size() - 1);
-            }
-        }
     }
     
     /**
