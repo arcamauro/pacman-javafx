@@ -7,8 +7,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 /**
- * This class represents a cell in the game board.
- * It contains the cell's properties such as if it is a wall, gate, player, ghost, key, or point.
+ * Represents a single cell in the Pacman game board.
+ * Each cell can contain various game elements such as walls, gates, players, ghosts, keys, or points.
+ * The cell extends StackPane to allow layering of multiple visual elements.
+ *
  * @author Arcangelo Mauro - xmauroa00
  */
 public class Cell extends StackPane {
@@ -25,12 +27,11 @@ public class Cell extends StackPane {
     private static final Image redGhostImage = new Image("file:Images/red_ghost.png");
     private static final Image keyImage = new Image("file:Images/key.png");
     private static final Image gateImage = new Image("file:Images/gate.png");
-    
     private Rectangle background;
     
     /**
-     * This constructor initializes the cell.
-     * It creates a rectangle with the given size and adds it to the cell.
+     * Constructs a new empty cell with default black background and blue border.
+     * The cell size is determined by the {@link #CELL_SIZE} constant.
      */
     public Cell() {
         background = new Rectangle(CELL_SIZE, CELL_SIZE);
@@ -40,7 +41,9 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method sets the cell to a wall.
+     * Converts this cell into a wall cell.
+     * A wall cell blocks movement and is represented by 'W' in the map file.
+     * The wall is visualized as a blue rectangle.
      */
     public void setWall() {
         isWall = true;
@@ -50,7 +53,9 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method sets the cell to the gate.
+     * Converts this cell into a gate cell.
+     * A gate can be opened with a key and is represented by 'G' in the map file.
+     * The gate is visualized using the gate image asset.
      */
     public void setGate() {
         isGate = true;
@@ -61,7 +66,9 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method sets the cell to the player.
+     * Places the player character in this cell.
+     * The player is represented by 'P' in the map file and is visualized
+     * using the Pacman image asset.
      */
     public void setPlayer() {
         hasPlayer = true;
@@ -72,7 +79,11 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method sets the cell to a ghost.
+     * Places a ghost in this cell.
+     * Ghosts are represented by 'R' (red) or 'O' (orange) in the map file.
+     * The ghost type is randomly selected between red and orange variants.
+     * 
+     * @see #getRandomGhostImage()
      */
     public void setGhost() {
         hasGhost = true;
@@ -84,8 +95,9 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method gets a random ghost image.
-     * @return a random ghost image
+     * Selects a random ghost image from the available ghost types.
+     *
+     * @return Image - Either a red or orange ghost image
      */
     private Image getRandomGhostImage() {
         Image[] ghostImages = {redGhostImage, orangeGhostImage};
@@ -94,7 +106,9 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method sets the cell to a key.
+     * Places a key item in this cell.
+     * Keys are represented by 'K' in the map file and can be collected
+     * by the player to open gates.
      */
     public void setKey() {
         hasKey = true;
@@ -105,7 +119,9 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method sets the cell to a point.
+     * Places a point item in this cell.
+     * Points are represented by 'P' in the map file and can be collected
+     * by the player to increase score.
      */
     public void setPoint() {
         hasPoint = true;
@@ -115,7 +131,9 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method sets the cell to an empty field.
+     * Resets this cell to an empty state.
+     * Empty cells are represented by 'E' in the map file.
+     * Ensures the background is present and visible.
      */
     public void setEmpty() {
         if (!getChildren().contains(background)) {
@@ -124,7 +142,8 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method removes the point from the cell.
+     * Removes the point from the cell.
+     * In the text file, the empty fields are represented by the letter 'E'.
      */
     public void removePoint() {
         hasPoint = false;
@@ -132,14 +151,13 @@ public class Cell extends StackPane {
     }
     
     /**
-     * This method removes the key from the cell.
+     * Removes the key from the cell.
      */
     public void removeKey() {
         hasKey = false;
         getChildren().removeIf(node -> node instanceof ImageView && ((ImageView) node).getImage() == keyImage);
     }
     
-    // Getters for properties
     public boolean isWall() { return isWall; }
     public boolean isGate() { return isGate; }
     public boolean hasPlayer() { return hasPlayer; }
@@ -149,7 +167,11 @@ public class Cell extends StackPane {
     public static int getCellSize() { return CELL_SIZE; }
     public static Image getPlayerImage() { return playerImage; }
     
-    // Add this method to get the current ghost image
+    /**
+     * Gets the current ghost image displayed in this cell, if any.
+     *
+     * @return Image - The current ghost image, or null if no ghost is present
+     */
     public Image getGhostImage() {
         for (javafx.scene.Node node : getChildren()) {
             if (node instanceof ImageView) {
@@ -162,7 +184,11 @@ public class Cell extends StackPane {
         return null;
     }
     
-    // Add this method to set ghost with specific image
+    /**
+     * Places a specific ghost type in this cell.
+     *
+     * @param ghostImage The specific ghost image to use (red or orange)
+     */
     public void setGhostWithImage(Image ghostImage) {
         hasGhost = true;
         ImageView ghostView = new ImageView(ghostImage);

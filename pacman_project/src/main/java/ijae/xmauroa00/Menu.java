@@ -29,14 +29,13 @@ import javafx.stage.Stage;
  * It also allows the user to view high scores.
  * @author Arcangelo Mauro - xmauroa00
  */
-
 public class Menu extends Application {
 
     private static final int WINDOW_WIDTH = 400;
     private static final int WINDOW_HEIGHT = 500;
     private VBox menuContainer;
     private GameBoard gameBoard;
-    private double currentSpeed = 200; // Store current speed
+    private double currentSpeed = 200;
 
     /**
      * This is the main entry point for the game.
@@ -46,31 +45,26 @@ public class Menu extends Application {
      */
     @Override
     public void start(Stage primaryStage) {
-        // Create main container
-        menuContainer = new VBox(20); // 20 is spacing between elements
+        menuContainer = new VBox(20);
         menuContainer.setAlignment(Pos.CENTER);
         menuContainer.setStyle("-fx-background-color: black;");
 
-        // Create title
         Text titleText = new Text("PACMAN");
         titleText.setFont(Font.font("Arial", 48));
         titleText.setStyle("-fx-fill: yellow;");
 
-        // Create buttons
         Button startButton = createMenuButton("Start Game");
         Button speedButton = createMenuButton("Speed: Normal");
         Button highScoresButton = createMenuButton("High Scores");
         Button uploadLevelButton = createMenuButton("Upload Level");
         Button exitButton = createMenuButton("Exit");
 
-        // Add event handlers
         startButton.setOnAction(e -> startGame());
         speedButton.setOnAction(e -> toggleSpeed(speedButton));
         highScoresButton.setOnAction(e -> showHighScores());
         uploadLevelButton.setOnAction(e -> uploadLevel(primaryStage));
         exitButton.setOnAction(e -> primaryStage.close());
 
-        // Add all elements to container
         menuContainer.getChildren().addAll(
             titleText,
             startButton,
@@ -80,7 +74,6 @@ public class Menu extends Application {
             exitButton
         );
 
-        // Create scene and show
         Scene scene = new Scene(menuContainer, WINDOW_WIDTH, WINDOW_HEIGHT);
         primaryStage.setTitle("Pacman Game");
         primaryStage.setScene(scene);
@@ -104,7 +97,6 @@ public class Menu extends Application {
             "-fx-min-height: 40px;"
         );
 
-        // Add hover effect
         button.setOnMouseEntered(e -> 
             button.setStyle(
                 "-fx-background-color: darkblue;" +
@@ -136,15 +128,15 @@ public class Menu extends Application {
     private void toggleSpeed(Button speedButton) {
         switch (speedButton.getText()) {
             case "Speed: Normal":
-                currentSpeed = 100;  // Fast speed
+                currentSpeed = 100;
                 speedButton.setText("Speed: Fast");
                 break;
             case "Speed: Fast":
-                currentSpeed = 300;  // Slow speed
+                currentSpeed = 300;
                 speedButton.setText("Speed: Slow");
                 break;
             default:
-                currentSpeed = 200;  // Normal speed
+                currentSpeed = 200;
                 speedButton.setText("Speed: Normal");
                 break;
         }
@@ -159,7 +151,6 @@ public class Menu extends Application {
      * It makes a mode selection dialog and allows the user to select the game mode.
      */
     private void startGame() {
-        // Create mode selection dialog
         Stage modeSelect = new Stage();
         modeSelect.initModality(Modality.APPLICATION_MODAL);
         modeSelect.setTitle("Select Game Mode");
@@ -168,30 +159,25 @@ public class Menu extends Application {
         modeContainer.setAlignment(Pos.CENTER);
         modeContainer.setStyle("-fx-background-color: black; -fx-padding: 20px;");
 
-        // Add title
         Text titleText = new Text("SELECT MODE");
         titleText.setFont(Font.font("Arial", 32));
         titleText.setStyle("-fx-fill: yellow;");
         modeContainer.getChildren().add(titleText);
 
-        // Create mode buttons
         Button storyButton = createMenuButton("Story Mode");
         Button customButton = createMenuButton("Custom Levels");
         Button backButton = createMenuButton("Back to Menu");
 
-        // Story Mode handler
         storyButton.setOnAction(e -> {
             startStoryMode();
             modeSelect.close();
         });
 
-        // Custom Levels handler
         customButton.setOnAction(e -> {
             showCustomLevels();
             modeSelect.close();
         });
 
-        // Back button handler
         backButton.setOnAction(e -> modeSelect.close());
 
         modeContainer.getChildren().addAll(storyButton, customButton, backButton);
@@ -203,7 +189,7 @@ public class Menu extends Application {
 
     /**
      * This method starts the story mode.
-     * It loads the level1.txt, which is the first level of the game, and starts the game.
+     * It loads the level1.txt, which is the first level of the game(story mode), and starts the game.
      */
     private void startStoryMode() {
         try {
@@ -233,26 +219,21 @@ public class Menu extends Application {
         levelContainer.setAlignment(Pos.CENTER);
         levelContainer.setStyle("-fx-background-color: black; -fx-padding: 20px;");
 
-        // Add title
         Text titleText = new Text("CUSTOM LEVELS");
         titleText.setFont(Font.font("Arial", 32));
         titleText.setStyle("-fx-fill: yellow;");
         levelContainer.getChildren().add(titleText);
 
         try {
-            // Get all custom level files from the levels directory
             File levelsDir = new File("levels");
             File[] levelFiles = levelsDir.listFiles((dir, name) -> {
-                // Exclude level1.txt, level2.txt, etc.
                 return name.toLowerCase().endsWith(".txt") && !name.matches("level[0-9]+\\.txt");
             });
 
             if (levelFiles != null && levelFiles.length > 0) {
                 for (File levelFile : levelFiles) {
                     String levelName = levelFile.getName();
-                    // Remove .txt extension for display
                     levelName = levelName.substring(0, levelName.lastIndexOf('.'));
-                    // Capitalize first letter and replace underscores with spaces
                     levelName = levelName.substring(0, 1).toUpperCase() + 
                                levelName.substring(1).replace('_', ' ');
                     
@@ -282,7 +263,6 @@ public class Menu extends Application {
                 levelContainer.getChildren().add(noLevelsText);
             }
 
-            // Add back button
             Button backButton = createMenuButton("Back to Menu");
             backButton.setOnAction(e -> levelSelect.close());
             levelContainer.getChildren().add(backButton);
@@ -301,7 +281,6 @@ public class Menu extends Application {
      * It loads the high scores from a file called highscores.txt and displays them.
      */
     private void showHighScores() {
-        // Create a new stage for high scores
         Stage highScoreStage = new Stage();
         highScoreStage.initModality(Modality.APPLICATION_MODAL);
         highScoreStage.setTitle("High Scores");
@@ -310,14 +289,12 @@ public class Menu extends Application {
         scoreContainer.setAlignment(Pos.CENTER);
         scoreContainer.setStyle("-fx-background-color: black; -fx-padding: 20px;");
 
-        // Add title
         Text titleText = new Text("HIGH SCORES");
         titleText.setFont(Font.font("Arial", 32));
         titleText.setStyle("-fx-fill: yellow;");
 
         scoreContainer.getChildren().add(titleText);
 
-        // Read and display high scores
         try {
             List<String> scores = readHighScores();
             for (String score : scores) {
@@ -333,7 +310,6 @@ public class Menu extends Application {
             scoreContainer.getChildren().add(errorText);
         }
 
-        // Add back button
         Button backButton = createMenuButton("Back to Menu");
         backButton.setOnAction(e -> highScoreStage.close());
         scoreContainer.getChildren().add(backButton);
@@ -355,28 +331,21 @@ public class Menu extends Application {
         try {
             List<Integer> scores = new ArrayList<>();
             
-            // Read existing scores
             try {
                 List<String> existingScores = Files.readAllLines(Path.of(HIGH_SCORES_FILE));
                 for (String line : existingScores) {
                     scores.add(Integer.parseInt(line.trim()));
                 }
             } catch (IOException e) {
-                // File doesn't exist yet, that's okay
             }
 
-            // Add new score
             scores.add(score);
-
-            // Sort in descending order
             scores.sort(Collections.reverseOrder());
 
-            // Keep only top scores
             while (scores.size() > MAX_HIGH_SCORES) {
                 scores.remove(scores.size() - 1);
             }
 
-            // Write back to file
             List<String> scoreStrings = new ArrayList<>();
             for (Integer s : scores) {
                 scoreStrings.add(s.toString());
@@ -419,14 +388,10 @@ public class Menu extends Application {
         File selectedFile = fileChooser.showOpenDialog(primaryStage);
         if (selectedFile != null) {
             try {
-                // Read and validate the level file
                 String levelContent = Files.readString(selectedFile.toPath());
                 if (isValidLevelFormat(levelContent)) {
-                    // Get original filename without extension
                     String originalName = selectedFile.getName();
                     String nameWithoutExtension = originalName.substring(0, originalName.lastIndexOf('.'));
-                    
-                    // Create the new filename
                     String fileName = nameWithoutExtension + ".txt";
                     
                     Path levelsDir = Path.of("levels");
@@ -434,7 +399,6 @@ public class Menu extends Application {
                         Files.createDirectory(levelsDir);
                     }
                     
-                    // Check if file already exists
                     if (Files.exists(levelsDir.resolve(fileName))) {
                         boolean overwrite = showConfirmationDialog(
                             "Level already exists",
@@ -482,25 +446,19 @@ public class Menu extends Application {
             String[] lines = content.trim().split("\\r?\\n");
             if (lines.length < 2) return false;
 
-            // Check first line contains two numbers
             String[] dimensions = lines[0].trim().split("\\s+");
             if (dimensions.length != 2) return false;
             int rows = Integer.parseInt(dimensions[0]);
             int cols = Integer.parseInt(dimensions[1]);
 
-            // Check if number of rows matches declared rows
             if (lines.length - 1 != rows) return false;
 
-            // Check each row
             for (int i = 1; i < lines.length; i++) {
                 String line = lines[i].trim();
-                // Check if row length matches declared columns
                 if (line.length() != cols) return false;
-                // Check if row contains only valid characters
                 if (!line.matches("[WPGCKo.]+")) return false;
             }
 
-            // Check if there is exactly one player (P) and one gate (G)
             String fullContent = String.join("", lines);
             if (fullContent.chars().filter(ch -> ch == 'P').count() != 1) return false;
             if (fullContent.chars().filter(ch -> ch == 'G').count() != 1) return false;
@@ -525,12 +483,10 @@ public class Menu extends Application {
         alert.setHeaderText(null);
         alert.setContentText(content);
         
-        // Style the alert
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.setStyle("-fx-background-color: black;");
         dialogPane.lookup(".content.label").setStyle("-fx-text-fill: white;");
         
-        // Style the buttons
         alert.getButtonTypes().forEach(buttonType -> {
             Button button = (Button) alert.getDialogPane().lookupButton(buttonType);
             button.setStyle(
@@ -557,7 +513,6 @@ public class Menu extends Application {
         alert.setHeaderText(header);
         alert.setContentText(content);
         
-        // Style the alert
         DialogPane dialogPane = alert.getDialogPane();
         dialogPane.setStyle("-fx-background-color: black;");
         dialogPane.lookup(".content.label").setStyle("-fx-text-fill: white;");

@@ -53,7 +53,7 @@ public class GameBoard extends GridPane {
      * It loads the level data and starts the game loop.
      * @param levelData the level data, so the level layout
      * @param level the level number, so the current level number to start from
-     * @param isStoryMode whether the game is in story mode
+     * @param isStoryMode whether the game is in story mode, so the levels not uploaded by a user
      */
     public GameBoard(String levelData, int level, boolean isStoryMode) {
         ghostCells = new ArrayList<>();
@@ -127,7 +127,6 @@ public class GameBoard extends GridPane {
     private void movePlayer() {
         if (currentDirection == Direction.NONE) return;
         
-        // Rotate player even if they can't move in that direction
         rotatePlayer(currentDirection);
         
         int[] newPos = getNewPosition(playerCell, currentDirection);
@@ -160,12 +159,13 @@ public class GameBoard extends GridPane {
      */
     private Direction getRandomDirection() {
         Direction[] directions = Direction.values();
-        return directions[(int)(Math.random() * (directions.length - 1))]; // Exclude NONE
+        return directions[(int)(Math.random() * (directions.length - 1))];
     }
     
     /**
      * This method gets the new position of the player or ghost.
      * It calculates the new position based on the current position and the direction.
+     * 
      * @param cell the current cell of the player or ghost
      * @param dir the direction of the player or ghost
      * @return the new position
@@ -186,9 +186,12 @@ public class GameBoard extends GridPane {
     /**
      * Checks if a move to the specified position is valid.
      * A move is valid if:
-     * - The position is within board bounds
-     * - The position is not a wall
-     * - If the position is a gate, the player must have the key
+     * <ul>
+     *  <li>The position is within board bounds</li>
+     *  <li>The position is not a wall</li>
+     *  <li>If the position is a gate, the player must have the key</li>
+     * </ul>
+     * 
      * @param row the row coordinate to check
      * @param col the column coordinate to check
      * @return true if the move is valid, false otherwise
@@ -203,7 +206,13 @@ public class GameBoard extends GridPane {
     
     /**
      * This method moves an entity.
-     * It handles the player collecting items and moving the player or ghost to the new position.
+     * It handles:
+     * <ul>
+     *  <li>The player collecting items</li>
+     *  <li>The player moving to the new position</li>
+     *  <li>The ghost moving to the new position</li>
+     * </ul>
+     * 
      * @param entityCell the entity to move
      * @param newRow the new row coordinate
      * @param newCol the new column coordinate
@@ -211,7 +220,6 @@ public class GameBoard extends GridPane {
     private void moveEntity(Cell entityCell, int newRow, int newCol) {
         Cell targetCell = board[newRow][newCol];
         
-        // Handle player collecting items
         if (entityCell == playerCell) {
             if (targetCell.hasPoint()) {
                 points += 10;
@@ -231,36 +239,29 @@ public class GameBoard extends GridPane {
                 return;
             }
             
-            // Get current position for player
             int oldRow = GridPane.getRowIndex(entityCell);
             int oldCol = GridPane.getColumnIndex(entityCell);
             
-            // Update the board array
             board[oldRow][oldCol] = targetCell;
             board[newRow][newCol] = entityCell;
             
-            // Update GridPane
             GridPane.setRowIndex(entityCell, newRow);
             GridPane.setColumnIndex(entityCell, newCol);
             GridPane.setRowIndex(targetCell, oldRow);
             GridPane.setColumnIndex(targetCell, oldCol);
             
         } else if (entityCell.hasGhost()) {
-            // For ghosts, only move the ghost image while preserving other elements
             if (board[newRow][newCol] == playerCell) {
                 gameLost();
                 return;
             }
             
-            // Get current position
             int oldRow = GridPane.getRowIndex(entityCell);
             int oldCol = GridPane.getColumnIndex(entityCell);
             
-            // Create new cells preserving the original elements
-            Cell newSourceCell = new Cell();  // Empty cell for where ghost was
-            Cell newTargetCell = new Cell();  // New cell with ghost for destination
+            Cell newSourceCell = new Cell();
+            Cell newTargetCell = new Cell();
             
-            // Copy any points, keys, or gates from the cells
             if (targetCell.hasPoint()) newTargetCell.setPoint();
             if (targetCell.hasKey()) newTargetCell.setKey();
             if (targetCell.isGate()) newTargetCell.setGate();
@@ -268,18 +269,14 @@ public class GameBoard extends GridPane {
             if (entityCell.hasKey()) newSourceCell.setKey();
             if (entityCell.isGate()) newSourceCell.setGate();
             
-            // Preserve the ghost's color by copying the ghost image from the original cell
             newTargetCell.setGhostWithImage(entityCell.getGhostImage());
             
-            // Remove old cells from GridPane
             getChildren().remove(entityCell);
             getChildren().remove(targetCell);
             
-            // Add new cells to GridPane
             add(newSourceCell, oldCol, oldRow);
             add(newTargetCell, newCol, newRow);
             
-            // Update board array and ghost list
             board[oldRow][oldCol] = newSourceCell;
             board[newRow][newCol] = newTargetCell;
             ghostCells.remove(entityCell);
@@ -302,7 +299,7 @@ public class GameBoard extends GridPane {
             
             if (playerRow == ghostRow && playerCol == ghostCol) {
                 gameLost();
-                break;  // Stop checking other ghosts
+                break;
             }
         }
     }
@@ -315,14 +312,12 @@ public class GameBoard extends GridPane {
      * @param levelData the level data, so the level layout
      */
     private void loadLevel(String levelData) {
-        // Normalize line endings and trim whitespace
         String[] lines = levelData.lines().toArray(String[]::new);
         
         if (lines.length < 2) {
             throw new IllegalArgumentException("Invalid level format: file must have at least 2 lines");
         }
         
-        // Split and parse dimensions, trimming any whitespace
         String[] dimensions = lines[0].trim().split(" ");
         if (dimensions.length != 2) {
             throw new IllegalArgumentException("Invalid dimension format: expected 2 numbers");
@@ -356,12 +351,15 @@ public class GameBoard extends GridPane {
      * This method creates a cell.
      * It creates a cell of the given type and adds it to the board.
      * The types are:
-     * W - wall
-     * G - gate
-     * P - player
-     * C - ghost
-     * K - key
-     * o - empty field with point
+     * <ul>
+     *  <li>W - wall</li>
+     *  <li>G - gate</li>
+     *  <li>P - player</li>
+     *  <li>C - ghost</li>
+     *  <li>K - key</li>
+     *  <li>o - empty field with point</li>
+     * </ul>
+     * 
      * @param type the type of the cell
      * @param row the row of the cell
      * @param col the column of the cell
@@ -392,33 +390,32 @@ public class GameBoard extends GridPane {
     
     /**
      * This method is called when the player wins the game.
-     * It stops the game loop, loads the next level, and restarts the game loop.
+     * It performs the following actions:
+     * <ul>
+     *  <li>Stops the game loop</li>
+     *  <li>Loads the next level</li>
+     *  <li>Restarts the game loop</li>
+     * </ul>
      */
     private void gameWon() {
         gameLoop.stop();
         
         if (currentLevel < TOT_LEVEL) {
-            // Load next level
             currentLevel++;
             Platform.runLater(() -> {
                 try {
-                    // Load the next level's data using File I/O
                     String levelData = Files.readString(Path.of("levels/level" + currentLevel + ".txt"));
                     
-                    // Clear current board
                     getChildren().clear();
                     ghostCells.clear();
                     
-                    // Reset game state
                     points = 0;
                     hasKey = false;
                     isGateOpen = false;
                     currentDirection = Direction.NONE;
                     
-                    // Load new level
                     loadLevel(levelData);
                     
-                    // Restart game loop
                     setupGameLoop();
                     
                 } catch (Exception e) {
@@ -426,9 +423,7 @@ public class GameBoard extends GridPane {
                 }
             });
         } else {
-            // Final level completed
             Platform.runLater(() -> {
-                // Save the score
                 Menu.saveHighScore(points);
                 
                 Dialog<ButtonType> dialog = new Dialog<>();
@@ -438,9 +433,7 @@ public class GameBoard extends GridPane {
                 ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
                 dialog.getDialogPane().getButtonTypes().add(menuButton);
                 
-                // Add the same styling as in gameLost()
                 DialogPane dialogPane = dialog.getDialogPane();
-                // [Add all the styling code from gameLost() here]
                 
                 dialog.showAndWait().ifPresent(response -> {
                     if (response == menuButton) {
@@ -459,63 +452,59 @@ public class GameBoard extends GridPane {
     
     /**
      * This method is called when the player loses the game.
-     * It stops the game loop, saves the score, and shows a dialog with the score.
-     * In the dialog the player can choose to return to the menu or restart from level 1.
+     * It performs the following actions:
+     * <ul>
+     *  <li>Stops the game loop</li>
+     *  <li>Saves the score</li>
+     *  <li>Shows a dialog with the score</li>
+     *  <li>In the dialog the player can choose to return to the menu or restart from level 1(story mode only)</li>
+     * </ul>
      */
     private void gameLost() {
         gameLoop.stop();
         
-        // Save the score
         Menu.saveHighScore(points);
         
-        // Create dialog
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Game Over");
         dialog.setHeaderText("Game Over!\nPoints: " + points);
         
-        // Add buttons
         ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().add(menuButton);
         
-        // Add restart button only if in story mode
         ButtonType restartButton = null;
         if (isStoryMode) {
             restartButton = new ButtonType("Restart from Level 1", ButtonBar.ButtonData.OTHER);
             dialog.getDialogPane().getButtonTypes().add(restartButton);
         }
         
-        // Style the dialog
         DialogPane dialogPane = dialog.getDialogPane();
         
-        // Main dialog styling
         dialogPane.setStyle(
             "-fx-background-color: #000000;" +
-            "-fx-border-color: #FFD700;" +  // Gold border
+            "-fx-border-color: #FFD700;" +
             "-fx-border-width: 3px;"
         );
         
-        // Header styling
         dialogPane.lookup(".header-panel").setStyle(
             "-fx-background-color: #000000;" +
-            "-fx-border-color: #FFD700;" +  // Gold border
-            "-fx-border-width: 0 0 2 0;"    // Bottom border only
+            "-fx-border-color: #FFD700;" +
+            "-fx-border-width: 0 0 2 0;"
         );
         
         dialogPane.lookup(".header-panel .label").setStyle(
-            "-fx-text-fill: #FF0000;" +     // Red text
+            "-fx-text-fill: #FF0000;" +
             "-fx-font-size: 28px;" +
             "-fx-font-weight: bold;" +
             "-fx-font-family: 'Arial';"
         );
         
-        // Content styling
         dialogPane.lookup(".content.label").setStyle(
-            "-fx-text-fill: #FFFFFF;" +     // White text
+            "-fx-text-fill: #FFFFFF;" +
             "-fx-font-size: 20px;" +
             "-fx-font-family: 'Arial';"
         );
         
-        // Style both buttons
         for (ButtonType buttonType : dialog.getDialogPane().getButtonTypes()) {
             Button button = (Button) dialogPane.lookupButton(buttonType);
             button.setStyle(
@@ -529,7 +518,6 @@ public class GameBoard extends GridPane {
                 "-fx-cursor: hand;"
             );
             
-            // Add hover effect to buttons
             button.setOnMouseEntered(e -> 
                 button.setStyle(
                     "-fx-background-color: #000080;" +
@@ -557,7 +545,6 @@ public class GameBoard extends GridPane {
             );
         }
         
-        // Show dialog and handle result
         ButtonType finalRestartButton = restartButton;
         Stage stage = (Stage) getScene().getWindow();
         
