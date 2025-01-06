@@ -465,6 +465,9 @@ public class GameBoard extends GridPane {
         
         Menu.saveHighScore(points);
         
+        // Store stage reference before creating dialog
+        Stage stage = (Stage) getScene().getWindow();
+        
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Game Over");
         dialog.setHeaderText("Game Over!\nPoints: " + points);
@@ -546,10 +549,9 @@ public class GameBoard extends GridPane {
         }
         
         ButtonType finalRestartButton = restartButton;
-        Stage stage = (Stage) getScene().getWindow();
         
+        // Change to use stored stage reference and handle close differently
         dialog.setOnCloseRequest(event -> {
-            dialog.close();
             ButtonType result = dialog.getResult();
             
             if (result == menuButton) {
