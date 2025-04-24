@@ -11,11 +11,9 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
-import javafx.scene.control.DialogPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
@@ -32,7 +30,6 @@ public class GameBoard extends GridPane {
     private int cols;
     private Cell playerCell;
     private List<Cell> ghostCells;
-    private boolean isGateOpen;
     private int points;
     private boolean hasKey;
     private Timeline gameLoop;
@@ -40,6 +37,7 @@ public class GameBoard extends GridPane {
     private int currentLevel = 1;
     private static final int TOT_LEVEL = 2;
     private boolean isStoryMode;
+    private Stage primaryStage;
     
     /**
      * This enum represents the possible directions the player can move.
@@ -54,13 +52,14 @@ public class GameBoard extends GridPane {
      * @param levelData the level data, so the level layout
      * @param level the level number, so the current level number to start from
      * @param isStoryMode whether the game is in story mode, so the levels not uploaded by a user
+     * @param primaryStage the primary stage of the application
      */
-    public GameBoard(String levelData, int level, boolean isStoryMode) {
+    public GameBoard(String levelData, int level, boolean isStoryMode, Stage primaryStage) {
+        this.primaryStage = primaryStage;
         ghostCells = new ArrayList<>();
         currentDirection = Direction.NONE;
         points = 0;
         hasKey = false;
-        isGateOpen = false;
         currentLevel = level;
         this.isStoryMode = isStoryMode;
         loadLevel(levelData);
@@ -106,6 +105,7 @@ public class GameBoard extends GridPane {
                 case DOWN:  currentDirection = Direction.DOWN; break;
                 case LEFT:  currentDirection = Direction.LEFT; break;
                 case RIGHT: currentDirection = Direction.RIGHT; break;
+                default: currentDirection = Direction.NONE; break;
             }
         });
     }
@@ -227,7 +227,7 @@ public class GameBoard extends GridPane {
             }
             if (targetCell.hasKey()) {
                 hasKey = true;
-                isGateOpen = true;
+                targetCell.removeKey();
                 targetCell.removeKey();
             }
             if (targetCell.isGate() && hasKey) {
@@ -411,7 +411,6 @@ public class GameBoard extends GridPane {
                     
                     points = 0;
                     hasKey = false;
-                    isGateOpen = false;
                     currentDirection = Direction.NONE;
                     
                     loadLevel(levelData);
@@ -432,9 +431,7 @@ public class GameBoard extends GridPane {
                 
                 ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
                 dialog.getDialogPane().getButtonTypes().add(menuButton);
-                
-                DialogPane dialogPane = dialog.getDialogPane();
-                
+
                 dialog.showAndWait().ifPresent(response -> {
                     if (response == menuButton) {
                         Stage stage = (Stage) getScene().getWindow();
@@ -462,118 +459,47 @@ public class GameBoard extends GridPane {
      */
     private void gameLost() {
         gameLoop.stop();
-        
+
         Menu.saveHighScore(points);
-        
-        // Store stage reference before creating dialog
-        Stage stage = (Stage) getScene().getWindow();
-        
+
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Game Over");
         dialog.setHeaderText("Game Over!\nPoints: " + points);
-        
+
         ButtonType menuButton = new ButtonType("Return to Menu", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().add(menuButton);
-        
-        ButtonType restartButton = null;
+
+        final ButtonType restartButton; // Declare as final
         if (isStoryMode) {
             restartButton = new ButtonType("Restart from Level 1", ButtonBar.ButtonData.OTHER);
             dialog.getDialogPane().getButtonTypes().add(restartButton);
+        } else {
+            restartButton = null; // Assign null if not in story mode
         }
-        
-        DialogPane dialogPane = dialog.getDialogPane();
-        
-        dialogPane.setStyle(
-            "-fx-background-color: #000000;" +
-            "-fx-border-color: #FFD700;" +
-            "-fx-border-width: 3px;"
-        );
-        
-        dialogPane.lookup(".header-panel").setStyle(
-            "-fx-background-color: #000000;" +
-            "-fx-border-color: #FFD700;" +
-            "-fx-border-width: 0 0 2 0;"
-        );
-        
-        dialogPane.lookup(".header-panel .label").setStyle(
-            "-fx-text-fill: #FF0000;" +
-            "-fx-font-size: 28px;" +
-            "-fx-font-weight: bold;" +
-            "-fx-font-family: 'Arial';"
-        );
-        
-        dialogPane.lookup(".content.label").setStyle(
-            "-fx-text-fill: #FFFFFF;" +
-            "-fx-font-size: 20px;" +
-            "-fx-font-family: 'Arial';"
-        );
-        
-        for (ButtonType buttonType : dialog.getDialogPane().getButtonTypes()) {
-            Button button = (Button) dialogPane.lookupButton(buttonType);
-            button.setStyle(
-                "-fx-background-color: #0000FF;" +
-                "-fx-text-fill: #FFFFFF;" +
-                "-fx-font-size: 16px;" +
-                "-fx-min-width: 150px;" +
-                "-fx-min-height: 40px;" +
-                "-fx-background-radius: 20;" +
-                "-fx-border-radius: 20;" +
-                "-fx-cursor: hand;"
-            );
-            
-            button.setOnMouseEntered(e -> 
-                button.setStyle(
-                    "-fx-background-color: #000080;" +
-                    "-fx-text-fill: #FFD700;" +
-                    "-fx-font-size: 16px;" +
-                    "-fx-min-width: 150px;" +
-                    "-fx-min-height: 40px;" +
-                    "-fx-background-radius: 20;" +
-                    "-fx-border-radius: 20;" +
-                    "-fx-cursor: hand;"
-                )
-            );
-            
-            button.setOnMouseExited(e -> 
-                button.setStyle(
-                    "-fx-background-color: #0000FF;" +
-                    "-fx-text-fill: #FFFFFF;" +
-                    "-fx-font-size: 16px;" +
-                    "-fx-min-width: 150px;" +
-                    "-fx-min-height: 40px;" +
-                    "-fx-background-radius: 20;" +
-                    "-fx-border-radius: 20;" +
-                    "-fx-cursor: hand;"
-                )
-            );
-        }
-        
-        ButtonType finalRestartButton = restartButton;
-        
-        // Change to use stored stage reference and handle close differently
+
         dialog.setOnCloseRequest(event -> {
             ButtonType result = dialog.getResult();
-            
+
             if (result == menuButton) {
                 Menu menu = new Menu();
                 try {
-                    menu.start(stage);
+                    menu.start(primaryStage); // Use the stored primaryStage
                 } catch (Exception e) {
-                    System.out.println("Error returning to menu");
+                    System.out.println("Error returning to menu: " + e.getMessage());
                 }
-            } else if (result == finalRestartButton) {
+            } else if (result == restartButton) {
                 try {
                     String levelData = Files.readString(Path.of("levels/level1.txt"));
-                    GameBoard newGame = new GameBoard(levelData, 1, true);
+                    GameBoard newGame = new GameBoard(levelData, 1, true, primaryStage);
                     Scene gameScene = new Scene(newGame);
-                    stage.setScene(gameScene);
+                    primaryStage.setScene(gameScene);
                     newGame.requestFocus();
                 } catch (IOException e) {
-                    System.out.println("Error restarting from level 1");
+                    System.out.println("Error restarting from level 1: " + e.getMessage());
                 }
             }
         });
-        
+
         dialog.show();
     }
     

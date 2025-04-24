@@ -194,10 +194,10 @@ public class Menu extends Application {
     private void startStoryMode() {
         try {
             String levelData = Files.readString(Path.of("levels/level1.txt"));
-            gameBoard = new GameBoard(levelData, 1, true);
+            Stage primaryStage = (Stage) menuContainer.getScene().getWindow(); // Get the primary stage
+            gameBoard = new GameBoard(levelData, 1, true, primaryStage); // Pass primaryStage
             gameBoard.setGameSpeed(currentSpeed);
-            
-            Stage primaryStage = (Stage) menuContainer.getScene().getWindow();
+
             Scene gameScene = new Scene(gameBoard);
             primaryStage.setScene(gameScene);
             gameBoard.requestFocus();
@@ -236,19 +236,19 @@ public class Menu extends Application {
                     levelName = levelName.substring(0, levelName.lastIndexOf('.'));
                     levelName = levelName.substring(0, 1).toUpperCase() + 
                                levelName.substring(1).replace('_', ' ');
-                    
+
                     Button levelButton = createMenuButton(levelName);
                     levelButton.setOnAction(e -> {
                         try {
                             String levelData = Files.readString(levelFile.toPath());
-                            gameBoard = new GameBoard(levelData, 1, false);
+                            Stage primaryStage = (Stage) menuContainer.getScene().getWindow(); // Get the primary stage
+                            gameBoard = new GameBoard(levelData, 1, false, primaryStage); // Pass primaryStage
                             gameBoard.setGameSpeed(currentSpeed);
-                            
-                            Stage primaryStage = (Stage) menuContainer.getScene().getWindow();
+
                             Scene gameScene = new Scene(gameBoard);
                             primaryStage.setScene(gameScene);
                             gameBoard.requestFocus();
-                            
+
                             levelSelect.close();
                         } catch (IOException ex) {
                             System.err.println("Error loading level file: " + ex.getMessage());
