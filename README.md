@@ -10,6 +10,7 @@ A classic Pacman game implementation using JavaFX with modern graphics and smoot
     <td><img src="./screenshots/screenshot_selection.png" alt="Selection" width="300"></td>
     <td><img src="./screenshots/screenshot_custom.png" alt="Custom" width="300"></td>
     <td><img src="./screenshots/screenshot_level.png" alt="Level" width="300"></td>
+    <td><img src="./screenshots/screenshot_highscores.png" alt="HighScores" width="300"></td>
   </tr>
 </table>
 
