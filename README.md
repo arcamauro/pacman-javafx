@@ -2,7 +2,16 @@
 
 A classic Pacman game implementation using JavaFX with modern graphics and smooth animations.
 
-![Pacman Game Screenshot](./screenshot.png)
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="./screenshots/screenshot_menu.png" alt="Menu" width="300"></td>
+    <td><img src="./screenshots/screenshot_selection.png" alt="Selection" width="300"></td>
+    <td><img src="./screenshots/screenshot_custom.png" alt="Custom" width="300"></td>
+    <td><img src="./screenshots/screenshot_level.png" alt="Level" width="300"></td>
+  </tr>
+</table>
 
 ## Features
 
