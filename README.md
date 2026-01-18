@@ -1,6 +1,6 @@
 # Pacman JavaFX
 
-A classic Pacman game implementation using JavaFX with modern graphics and smooth animations.
+A classic Pacman game implementation using JavaFX.
 
 ## Screenshots
 
